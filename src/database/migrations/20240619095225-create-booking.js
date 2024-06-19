@@ -12,10 +12,6 @@ module.exports = {
       date: {
         type: Sequelize.DATE
       },
-      checkout: {
-        type: Sequelize.ENUM('true', 'false'),
-        defaultValue: 'false'
-      },
       bank_name: {
         type: Sequelize.STRING
       },
@@ -26,7 +22,8 @@ module.exports = {
         type: Sequelize.STRING
       },
       status: {
-        type: Sequelize.STRING
+        type: Sequelize.ENUM('belum_bayar', 'pending', 'bayar_berhasil'),
+        defaultValue: 'belum_bayar'
       },
       createdAt: {
         allowNull: false,
