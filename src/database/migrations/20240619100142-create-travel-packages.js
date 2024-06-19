@@ -10,7 +10,7 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       thumbnail: {
-        type: Sequelize.BLOB
+        type: Sequelize.STRING
       },
       category: {
         type: Sequelize.STRING
