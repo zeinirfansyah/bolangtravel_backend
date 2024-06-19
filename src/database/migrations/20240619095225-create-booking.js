@@ -13,7 +13,7 @@ module.exports = {
         type: Sequelize.DATE
       },
       checkout: {
-        type: Sequelize.ENUM('value', 'false'),
+        type: Sequelize.ENUM('true', 'false'),
         defaultValue: 'false'
       },
       bank_name: {
