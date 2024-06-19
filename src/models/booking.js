@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
   Booking.init({
     date: DataTypes.DATE,
     checkout: {
-      type: Sequelize.ENUM('value', 'false'),
+      type: Sequelize.ENUM('true', 'false'),
       defaultValue: 'false'
     },
     bank_name: DataTypes.STRING,
