@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
   Destinations.init({
     title: DataTypes.STRING,
     description: DataTypes.STRING,
-    thumbnail: DataTypes.BLOB
+    thumbnail: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Destinations',

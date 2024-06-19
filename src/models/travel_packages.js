@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Travel_Packages.init({
-    thumbnail: DataTypes.BLOB,
+    thumbnail: DataTypes.STRING,
     category: DataTypes.STRING,
     title: DataTypes.STRING,
     description: DataTypes.STRING,
