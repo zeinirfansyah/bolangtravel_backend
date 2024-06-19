@@ -15,14 +15,13 @@ module.exports = (sequelize, DataTypes) => {
   }
   Booking.init({
     date: DataTypes.DATE,
-    checkout: {
-      type: Sequelize.ENUM('true', 'false'),
-      defaultValue: 'false'
-    },
     bank_name: DataTypes.STRING,
     payer_name: DataTypes.STRING,
     transfer_receipt: DataTypes.STRING,
-    status: DataTypes.STRING
+    status: {
+      type: Sequelize.ENUM('belum_bayar', 'pending', 'bayar_berhasil'),
+      defaultValue: 'belum_bayar'
+    },
   }, {
     sequelize,
     modelName: 'Booking',
