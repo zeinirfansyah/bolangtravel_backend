@@ -19,6 +19,7 @@ module.exports = {
         type: Sequelize.STRING
       },
       transfer_receipt: {
+        allowNull: true,
         type: Sequelize.STRING
       },
       status: {
