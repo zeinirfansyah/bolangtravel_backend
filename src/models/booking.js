@@ -22,7 +22,14 @@ module.exports = (sequelize, DataTypes) => {
     bank_name: DataTypes.STRING,
     payer_name: DataTypes.STRING,
     transfer_receipt: DataTypes.STRING,
+<<<<<<< HEAD
     status: DataTypes.STRING
+=======
+    status: {
+      type: DataTypes.ENUM('belum_bayar', 'pending', 'bayar_berhasil'),
+      defaultValue: 'belum_bayar'
+    },
+>>>>>>> 2def747e099a39594db156474f509beb3c336237
   }, {
     sequelize,
     modelName: 'Booking',
