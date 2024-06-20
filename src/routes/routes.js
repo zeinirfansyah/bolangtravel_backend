@@ -1,10 +1,15 @@
 const express = require("express");
 const { verifyToken, authorizeRole } = require("../middleware/auth");
-const { userList, userById } = require("../controllers/user.controller");
+const { createUser, getUsers, getUserById, updateUser, deleteUser, updateProfile, deleteProfile } = require("../controllers/user.controller");
 
 const router = express.Router();
 
-router.get("/users", verifyToken, authorizeRole("admin"), userList);
-router.get("/users/:id", verifyToken, authorizeRole("admin"), userById);
+router.get("/users", verifyToken, authorizeRole("admin"), getUsers);
+router.get("/user/:id", verifyToken, authorizeRole("admin"), getUserById);
+router.post("/user", verifyToken, authorizeRole("admin"), createUser);
+router.patch("/user/:id", verifyToken, authorizeRole("admin"), updateUser);
+router.delete("/user/:id", verifyToken, authorizeRole("admin"), deleteUser);
+router.patch("/account", verifyToken, updateProfile);
+router.delete("/account", verifyToken, deleteProfile);
 
 module.exports = router;
