@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+
+      rundown.belongsTo(models.Travel_Packages, {
+        foreignKey: 'rundown_id',
+      });
     }
   }
   rundown.init({

@@ -35,7 +35,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM('belum_bayar', 'pending', 'bayar_berhasil'),
       defaultValue: 'belum_bayar'
     },
->>>>>>> 2def747e099a39594db156474f509beb3c336237
   }, {
     sequelize,
     modelName: 'Booking',
