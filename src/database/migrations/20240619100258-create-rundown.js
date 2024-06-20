@@ -15,6 +15,15 @@ module.exports = {
       agenda: {
         type: Sequelize.STRING
       },
+      travel_package_id: {
+        type: Sequelize.INTEGER,
+        reference: {
+          model: 'Travel_Packages',
+          key: 'id'
+        },
+        onUpdate: 'cascade',
+        onDelete: 'cascade'
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
