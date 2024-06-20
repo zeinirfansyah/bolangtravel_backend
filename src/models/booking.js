@@ -11,6 +11,15 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+
+      Booking.belongsTo(models.User, {
+        foreignKey: 'booking_id',
+      });
+
+      Booking.belongsTo(models.Travel_Packages, {
+        foreignKey: 'booking_id',
+      });
+
     }
   }
   Booking.init({
@@ -22,9 +31,6 @@ module.exports = (sequelize, DataTypes) => {
     bank_name: DataTypes.STRING,
     payer_name: DataTypes.STRING,
     transfer_receipt: DataTypes.STRING,
-<<<<<<< HEAD
-    status: DataTypes.STRING
-=======
     status: {
       type: DataTypes.ENUM('belum_bayar', 'pending', 'bayar_berhasil'),
       defaultValue: 'belum_bayar'
