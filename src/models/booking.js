@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
     payer_name: DataTypes.STRING,
     transfer_receipt: DataTypes.STRING,
     status: {
-      type: Sequelize.ENUM('belum_bayar', 'pending', 'bayar_berhasil'),
+      type: DataTypes.ENUM('belum_bayar', 'pending', 'bayar_berhasil'),
       defaultValue: 'belum_bayar'
     },
   }, {
