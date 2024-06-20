@@ -9,11 +9,23 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      id_travel_packages: {
-        type: Sequelize.INTEGER
+      travel_package_id: {
+        type: Sequelize.INTEGER,
+        reference: {
+          model: 'Travel_Packages',
+          key: 'id'
+        },
+        onUpdate: 'cascade',
+        onDelete: 'cascade'
       },
-      id_destinations: {
-        type: Sequelize.INTEGER
+      destination_id: {
+        type: Sequelize.INTEGER,
+        reference: {
+          model: 'Destinations',
+          key: 'id'
+        },
+        onUpdate: 'cascade',
+        onDelete: 'cascade'
       },
       createdAt: {
         allowNull: false,
