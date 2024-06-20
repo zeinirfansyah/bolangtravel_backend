@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
 
       User.hasMany(models.Booking, {
-        foreignKey: 'contomer_id',
+        foreignKey: 'user_id',
       })
     }
   }

@@ -13,15 +13,17 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
 
       Travel_Packages.hasMany(models.Booking, {
-        foreignKey: 'package_id',
+        foreignKey: 'travel_package_id',
       });
       
-      Travel_Packages.hasMany(models.rundown, {
-        foreignKey: 'package_id',
+      Travel_Packages.hasMany(models.Rundowns, {
+        foreignKey: 'travel_package_id',
       });
 
       Travel_Packages.belongsToMany(models.Destinations, {
-        foreignKey: 'package_id',
+        through: models.Travel_Packages_Destinations,
+        as: 'destinations', 
+        foreignKey: 'travel_package_id',
       });
     }
   }
