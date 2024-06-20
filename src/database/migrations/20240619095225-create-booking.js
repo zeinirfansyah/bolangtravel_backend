@@ -26,6 +26,24 @@ module.exports = {
         type: Sequelize.ENUM('belum_bayar', 'pending', 'bayar_berhasil'),
         defaultValue: 'belum_bayar'
       },
+      user_id: {
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Users',
+          key: 'id'
+        },
+        onUpdate: 'cascade',
+        onDelete: 'cascade'
+      },
+      travel_package_id: {
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Travel_Packages',
+          key: 'id'
+        },
+        onUpdate: 'cascade',
+        onDelete: 'cascade'
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
