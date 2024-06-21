@@ -1,10 +1,10 @@
 const { isEmail, isStrongPassword } = require("validator");
-const { User: UserModel } = require("../models");
+const { Users: UserModel } = require("../models");
 
 const validateRegister = async (req, res, next) => {
-  const { fullName, phone, address, username, email, password } = req.body;
+  const { fullname, phone, address, username, email, password } = req.body;
 
-  if (!fullName || !phone || !address || !username || !email || !password) {
+  if (!fullname || !phone || !address || !username || !email || !password) {
     return res.status(400).send({
       message: "Bad request",
       data: null,
