@@ -65,17 +65,16 @@ const getUserById = async (req, res, _next) => {
 
 const createUser = async (req, res, _next) => {
   try {
-    const { fullName, phone, address, username, email, password, role } =
+    const { fullname, phone, address, username, email, password, role } =
       req.body;
 
     if (
-      !fullName ||
+      !fullname ||
       !phone ||
       !address ||
       !username ||
       !email ||
-      !password ||
-      !role
+      !password
     ) {
       return res.status(400).send({
         success: false,
@@ -97,7 +96,7 @@ const createUser = async (req, res, _next) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await Users.create({
-      fullName,
+      fullname,
       phone,
       address,
       username,
@@ -123,11 +122,11 @@ const createUser = async (req, res, _next) => {
 const updateUser = async (req, res, _next) => {
   try {
     const { id } = req.params;
-    const { fullName, phone, address, username, email, password, role } =
+    const { fullname, phone, address, username, email, password, role } =
       req.body;
 
     if (
-      !fullName ||
+      !fullname ||
       !phone ||
       !address ||
       !username ||
@@ -153,7 +152,7 @@ const updateUser = async (req, res, _next) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const updatedUser = await user.update({
-      fullName,
+      fullname,
       phone,
       address,
       username,
@@ -207,9 +206,9 @@ const deleteUser = async (req, res, _next) => {
 const updateProfile = async (req, res, _next) => {
   try {
     const { id } = req.user;
-    const { fullName, phone, address, username, email, password } = req.body;
+    const { fullname, phone, address, username, email, password } = req.body;
 
-    if (!fullName || !phone || !address || !username || !email || !password) {
+    if (!fullname || !phone || !address || !username || !email || !password) {
       return res.status(400).send({
         success: false,
         message: "Please provide all fields",
@@ -228,7 +227,7 @@ const updateProfile = async (req, res, _next) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const updatedUser = await user.update({
-      fullName,
+      fullname,
       phone,
       address,
       username,
