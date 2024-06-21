@@ -1,9 +1,9 @@
-const { User } = require("../models");
+const { Users } = require("../models");
 const bcrypt = require("bcryptjs");
 
 const getUsers = async (req, res, _next) => {
   try {
-    const users = await User.findAll({
+    const users = await Users.findAll({
       attributes: {
         exclude: ["password"],
       },
@@ -34,7 +34,7 @@ const getUsers = async (req, res, _next) => {
 const getUserById = async (req, res, _next) => {
   try {
     const { id } = req.params;
-    const user = await User.findOne({
+    const user = await Users.findOne({
       where: { id },
       attributes: {
         exclude: ["password"],
@@ -44,14 +44,14 @@ const getUserById = async (req, res, _next) => {
     if (!user) {
       return res.status(404).send({
         success: false,
-        message: "User not found",
+        message: "Users not found",
         data: null,
       });
     }
 
     return res.status(200).send({
       success: true,
-      message: "User retrieved successfully",
+      message: "Users retrieved successfully",
       data: user,
     });
   } catch (error) {
@@ -84,8 +84,8 @@ const createUser = async (req, res, _next) => {
       });
     }
 
-    const existingUser = await User.findOne({ where: { username } });
-    const existingEmail = await User.findOne({ where: { email } });
+    const existingUser = await Users.findOne({ where: { username } });
+    const existingEmail = await Users.findOne({ where: { email } });
 
     if (existingUser || existingEmail) {
       return res.status(400).send({
@@ -96,7 +96,7 @@ const createUser = async (req, res, _next) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({
+    const user = await Users.create({
       fullName,
       phone,
       address,
@@ -108,7 +108,7 @@ const createUser = async (req, res, _next) => {
 
     return res.status(201).send({
       success: true,
-      message: "User created successfully",
+      message: "Users created successfully",
       data: user,
     });
   } catch (error) {
@@ -142,11 +142,11 @@ const updateUser = async (req, res, _next) => {
       });
     }
 
-    const user = await User.findOne({ where: { id } });
+    const user = await Users.findOne({ where: { id } });
     if (!user) {
       return res.status(404).send({
         success: false,
-        message: "User not found",
+        message: "Users not found",
         data: null,
       });
     }
@@ -164,7 +164,7 @@ const updateUser = async (req, res, _next) => {
 
     return res.status(200).send({
       success: true,
-      message: "User updated successfully",
+      message: "Users updated successfully",
       data: updatedUser,
     });
   } catch (error) {
@@ -179,11 +179,11 @@ const updateUser = async (req, res, _next) => {
 const deleteUser = async (req, res, _next) => {
   try {
     const { id } = req.params;
-    const user = await User.findOne({ where: { id } });
+    const user = await Users.findOne({ where: { id } });
     if (!user) {
       return res.status(404).send({
         success: false,
-        message: "User not found",
+        message: "Users not found",
         data: null,
       });
     }
@@ -192,7 +192,7 @@ const deleteUser = async (req, res, _next) => {
 
     return res.status(200).send({
       success: true,
-      message: "User deleted successfully",
+      message: "Users deleted successfully",
       data: null,
     });
   } catch (error) {
@@ -217,11 +217,11 @@ const updateProfile = async (req, res, _next) => {
       });
     }
 
-    const user = await User.findOne({ where: { id } });
+    const user = await Users.findOne({ where: { id } });
     if (!user) {
       return res.status(404).send({
         success: false,
-        message: "User not found",
+        message: "Users not found",
         data: null,
       });
     }
@@ -253,12 +253,12 @@ const updateProfile = async (req, res, _next) => {
 const deleteProfile = async (req, res, _next) => {
   try {
     const { id } = req.user;
-    const user = await User.findOne({ where: { id } });
+    const user = await Users.findOne({ where: { id } });
 
     if (!user) {
       return res.status(404).send({
         success: false,
-        message: "User not found",
+        message: "Users not found",
         data: null,
       });
     }
