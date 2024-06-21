@@ -38,6 +38,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Travel_Packages',
+    freezeTableName: true
   });
   return Travel_Packages;
 };
