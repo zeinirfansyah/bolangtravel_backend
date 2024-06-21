@@ -1,7 +1,7 @@
 const express = require("express");
 const { verifyToken, authorizeRole } = require("../middleware/auth");
 const { createUser, getUsers, getUserById, updateUser, deleteUser, updateProfile, deleteProfile } = require("../controllers/user.controller");
-const { getAllTravelPackages } = require("../controllers/travel-package.controller");
+const { getAllTravelPackages, getTravelPackageById } = require("../controllers/travel-package.controller");
 
 const router = express.Router();
 
@@ -14,5 +14,6 @@ router.delete("/user/:id", verifyToken, authorizeRole("admin"), deleteUser);
 router.patch("/account", verifyToken, updateProfile);
 router.delete("/account", verifyToken, deleteProfile);
 
-router.get("/travel-packages", getAllTravelPackages);
+router.get("/travel-packages/table/:limit&:pages", getAllTravelPackages);
+router.get("/travel-packages/:id", getTravelPackageById);
 module.exports = router;

@@ -122,24 +122,8 @@ const createUser = async (req, res, _next) => {
 const updateUser = async (req, res, _next) => {
   try {
     const { id } = req.params;
-    const { fullname, phone, address, username, email, password, role } =
+    const { fullname, phone, address, username, email, role } =
       req.body;
-
-    if (
-      !fullname ||
-      !phone ||
-      !address ||
-      !username ||
-      !email ||
-      !password ||
-      !role
-    ) {
-      return res.status(400).send({
-        success: false,
-        message: "Please provide all fields",
-        data: null,
-      });
-    }
 
     const user = await Users.findOne({ where: { id } });
     if (!user) {
@@ -150,14 +134,12 @@ const updateUser = async (req, res, _next) => {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
     const updatedUser = await user.update({
       fullname,
       phone,
       address,
       username,
       email,
-      password: hashedPassword,
       role,
     });
 
@@ -208,14 +190,6 @@ const updateProfile = async (req, res, _next) => {
     const { id } = req.user;
     const { fullname, phone, address, username, email, password } = req.body;
 
-    if (!fullname || !phone || !address || !username || !email || !password) {
-      return res.status(400).send({
-        success: false,
-        message: "Please provide all fields",
-        data: null,
-      });
-    }
-
     const user = await Users.findOne({ where: { id } });
     if (!user) {
       return res.status(404).send({
@@ -225,14 +199,12 @@ const updateProfile = async (req, res, _next) => {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
     const updatedUser = await user.update({
       fullname,
       phone,
       address,
       username,
       email,
-      password: hashedPassword,
     });
 
     return res.status(200).send({
