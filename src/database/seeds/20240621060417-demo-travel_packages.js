@@ -16,7 +16,7 @@ module.exports = {
         description: faker.commerce.productDescription(),
         price: faker.commerce.price(),
         location: faker.location.city(),
-        duration: faker.number.int({ min: 1, max: 7 }),
+        duration: 4,
         created_at: new Date(),
         updated_at: new Date(),
       });
