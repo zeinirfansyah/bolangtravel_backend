@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
 
       Booking.belongsTo(models.Users, {
-        as: 'user',
+        as: 'users',
         foreignKey: 'user_id',
       });
 
