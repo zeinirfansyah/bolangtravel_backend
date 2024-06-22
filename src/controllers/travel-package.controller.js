@@ -1,5 +1,11 @@
 const { where } = require("sequelize");
-const { Travel_Packages, Destinations, Rundowns } = require("../models");
+const {
+  Travel_Packages,
+  Destinations,
+  Rundowns,
+  Travel_Packages_Destinations,
+  sequelize,
+} = require("../models");
 
 const getAllTravelPackages = async (req, res, _next) => {
   try {
@@ -13,22 +19,7 @@ const getAllTravelPackages = async (req, res, _next) => {
     const packages = await Travel_Packages.findAndCountAll({
       limit: limit_int,
       offset: offset,
-      // include: [
-      //   {
-      //     model: Destinations,
-      //     as: "destinations",
-      //     attributes: {
-      //       exclude: ["created_at", "updated_at"],
-      //     },
-      //   },
-      //   {
-      //     model: Rundowns,
-      //     as: "rundowns",
-      //     attributes: {
-      //       exclude: ["created_at", "updated_at"],
-      //     },
-      //   },
-      // ],
+
       attributes: {
         exclude: ["created_at", "updated_at"],
       },
@@ -41,20 +32,6 @@ const getAllTravelPackages = async (req, res, _next) => {
         data: null,
       });
     }
-
-    // const formatedPackages = packages.map((package) => {
-    //   return {
-    //     id: package.id,
-    //     title: package.title,
-    //     description: package.description,
-    //     thumbnail: package.thumbnail,
-    //     price: package.price,
-    //     location: package.location,
-    //     duration: package.duration,
-    //     destinations: package.destinations,
-    //     rundowns: package.rundowns,
-    //   };
-    // });
 
     return res.status(200).send({
       success: true,
@@ -71,7 +48,7 @@ const getAllTravelPackages = async (req, res, _next) => {
 };
 const getTravelPackageById = async (req, res, _next) => {
   try {
-   const {id} = req.params;
+    const { id } = req.params;
 
     const packages = await Travel_Packages.findOne({
       where: { id },
@@ -118,4 +95,86 @@ const getTravelPackageById = async (req, res, _next) => {
   }
 };
 
-module.exports = { getAllTravelPackages, getTravelPackageById };
+const createTravelPackage = async (req, res) => {
+  const {
+    thumbnail,
+    category,
+    title,
+    description,
+    price,
+    location,
+    duration,
+    destinations,
+    rundowns,
+  } = req.body;
+
+  try {
+    const newPackage = await Travel_Packages.create(
+      {
+        thumbnail,
+        category,
+        title,
+        description,
+        price,
+        location,
+        duration,
+      },
+    );
+
+    // Create associated destinations
+    if (destinations && destinations.length > 0) {
+      for (const destination of destinations) {
+        const newDestination = await Destinations.create(destination);
+        console.log(`New destination created: ${newDestination.id}`);
+        await Travel_Packages_Destinations.create(
+          {
+            travel_package_id: newPackage.id,
+            destination_id: newDestination.id,
+          },
+        );
+      }
+    }
+
+    // Create associated rundowns
+    if (rundowns && rundowns.length > 0) {
+      for (const rundown of rundowns) {
+        await Rundowns.create(
+          {
+            ...rundown,
+            travel_package_id: newPackage.id,
+          },
+        );
+      }
+    }
+
+    // Fetch the new package with its associations
+    const createdPackage = await Travel_Packages.findByPk(newPackage.id, {
+      include: [
+        {
+          model: Destinations,
+          as: "destinations",
+        },
+        {
+          model: Rundowns,
+          as: "rundowns",
+        },
+      ],
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Travel package created successfully",
+      data: createdPackage,
+    });
+  } catch (error) {
+    console.error("Error creating travel package: ", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+module.exports = {
+  getAllTravelPackages,
+  getTravelPackageById,
+  createTravelPackage,
+};
