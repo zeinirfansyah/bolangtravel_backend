@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
 
       Destinations.belongsToMany(models.Travel_Packages, {
         through: 'Travel_Packages_Destinations',
-        as: 'packages',
+        as: 'travel_packages',
         foreignKey: 'destination_id',
       });
     }
