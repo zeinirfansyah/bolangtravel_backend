@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
 
       Rundowns.belongsTo(models.Travel_Packages, {
+        as: 'travel_packages',
         foreignKey: 'travel_package_id',
       });
     }
@@ -24,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Rundowns',
+    freezeTableName: true
   });
   return Rundowns;
 };

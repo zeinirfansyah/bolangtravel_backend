@@ -13,15 +13,17 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
 
       Travel_Packages.hasMany(models.Booking, {
+        as: 'bookings',
         foreignKey: 'travel_package_id',
       });
       
       Travel_Packages.hasMany(models.Rundowns, {
+        as: 'rundowns',
         foreignKey: 'travel_package_id',
       });
 
       Travel_Packages.belongsToMany(models.Destinations, {
-        through: models.Travel_Packages_Destinations,
+        through: 'Travel_Packages_Destinations',
         as: 'destinations', 
         foreignKey: 'travel_package_id',
       });
@@ -38,6 +40,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Travel_Packages',
+    freezeTableName: true
   });
   return Travel_Packages;
 };

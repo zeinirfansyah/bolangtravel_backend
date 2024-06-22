@@ -1,8 +1,9 @@
-const { User } = require("../models");
+const { Users } = require("../models");
+const bcrypt = require("bcryptjs");
 
-const userList = async (req, res, _next) => {
+const getUsers = async (req, res, _next) => {
   try {
-    const users = await User.findAll({
+    const users = await Users.findAll({
       attributes: {
         exclude: ["password"],
       },
@@ -30,10 +31,10 @@ const userList = async (req, res, _next) => {
   }
 };
 
-const userById = async (req, res, _next) => {
+const getUserById = async (req, res, _next) => {
   try {
     const { id } = req.params;
-    const user = await User.findOne({
+    const user = await Users.findOne({
       where: { id },
       attributes: {
         exclude: ["password"],
@@ -43,14 +44,14 @@ const userById = async (req, res, _next) => {
     if (!user) {
       return res.status(404).send({
         success: false,
-        message: "User not found",
+        message: "Users not found",
         data: null,
       });
     }
 
     return res.status(200).send({
       success: true,
-      message: "User retrieved successfully",
+      message: "Users retrieved successfully",
       data: user,
     });
   } catch (error) {
@@ -62,7 +63,199 @@ const userById = async (req, res, _next) => {
   }
 };
 
+const createUser = async (req, res, _next) => {
+  try {
+    const { fullname, phone, address, username, email, password, role } =
+      req.body;
+
+    if (
+      !fullname ||
+      !phone ||
+      !address ||
+      !username ||
+      !email ||
+      !password
+    ) {
+      return res.status(400).send({
+        success: false,
+        message: "Please provide all fields",
+        data: null,
+      });
+    }
+
+    const existingUser = await Users.findOne({ where: { username } });
+    const existingEmail = await Users.findOne({ where: { email } });
+
+    if (existingUser || existingEmail) {
+      return res.status(400).send({
+        success: false,
+        message: "Username or email already exists",
+        data: null,
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await Users.create({
+      fullname,
+      phone,
+      address,
+      username,
+      email,
+      password: hashedPassword,
+      role,
+    });
+
+    return res.status(201).send({
+      success: true,
+      message: "Users created successfully",
+      data: user,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: error.message,
+      data: null,
+    });
+  }
+};
+
+const updateUser = async (req, res, _next) => {
+  try {
+    const { id } = req.params;
+    const { fullname, phone, address, username, email, role } =
+      req.body;
+
+    const user = await Users.findOne({ where: { id } });
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "Users not found",
+        data: null,
+      });
+    }
+
+    const updatedUser = await user.update({
+      fullname,
+      phone,
+      address,
+      username,
+      email,
+      role,
+    });
+
+    return res.status(200).send({
+      success: true,
+      message: "Users updated successfully",
+      data: updatedUser,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: error.message,
+      data: null,
+    });
+  }
+};
+
+const deleteUser = async (req, res, _next) => {
+  try {
+    const { id } = req.params;
+    const user = await Users.findOne({ where: { id } });
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "Users not found",
+        data: null,
+      });
+    }
+
+    await user.destroy();
+
+    return res.status(200).send({
+      success: true,
+      message: "Users deleted successfully",
+      data: null,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: error.message,
+      data: null,
+    });
+  }
+};
+
+const updateProfile = async (req, res, _next) => {
+  try {
+    const { id } = req.user;
+    const { fullname, phone, address, username, email, password } = req.body;
+
+    const user = await Users.findOne({ where: { id } });
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "Users not found",
+        data: null,
+      });
+    }
+
+    const updatedUser = await user.update({
+      fullname,
+      phone,
+      address,
+      username,
+      email,
+    });
+
+    return res.status(200).send({
+      success: true,
+      message: "Profile updated successfully",
+      data: updatedUser,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: error.message,
+      data: null,
+    });
+  }
+};
+
+const deleteProfile = async (req, res, _next) => {
+  try {
+    const { id } = req.user;
+    const user = await Users.findOne({ where: { id } });
+
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "Users not found",
+        data: null,
+      });
+    }
+
+    await user.destroy();
+
+    return res.status(200).send({
+      success: true,
+      message: "Profile deleted successfully",
+      data: null,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: error.message,
+      data: null,
+    });
+  }
+};
+
 module.exports = {
-  userList,
-  userById,
+  getUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUser,
+  updateProfile,
+  deleteProfile,
 };

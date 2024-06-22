@@ -1,11 +1,11 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { User } = require("../models");
+const { Users } = require("../models");
 
 const register = async (req, res, _next) => {
-  const { fullName, email, phone, address, username, password } = req.body;
+  const { fullname, email, phone, address, username, password } = req.body;
   try {
-    if (!fullName || !email || !phone || !address || !username || !password) {
+    if (!fullname || !email || !phone || !address || !username || !password) {
       return res.status(400).json({
         success: false,
         message: "Please provide all fields",
@@ -13,8 +13,8 @@ const register = async (req, res, _next) => {
     }
 
     // check existing email and user
-    const existingUser = await User.findOne({ where: { username } });
-    const existingEmail = await User.findOne({ where: { email } });
+    const existingUser = await Users.findOne({ where: { username } });
+    const existingEmail = await Users.findOne({ where: { email } });
 
     if (existingUser || existingEmail) {
       return res.status(400).json({
@@ -24,8 +24,8 @@ const register = async (req, res, _next) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({
-      fullName,
+    const user = await Users.create({
+      fullname,
       email,
       phone,
       address,
@@ -56,7 +56,7 @@ const login = async (req, res, _next) => {
       });
     }
 
-    const user = await User.findOne({ where: { username } });
+    const user = await Users.findOne({ where: { username } });
 
     if (!user) {
       return res.status(404).json({
@@ -76,7 +76,7 @@ const login = async (req, res, _next) => {
     const token = jwt.sign(
       {
         id: user.id,
-        fullName: user.fullName,
+        fullname: user.fullname,
         email: user.email,
         phone: user.phone,
         address: user.address,

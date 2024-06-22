@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const { User } = require("../models");
+const { Users } = require("../models");
 
 const verifyToken = async (req, res, next) => {
   try {
@@ -40,7 +40,7 @@ const authorizeRole = (requiredRole) => {
   return async (req, res, next) => {
     try {
       const userId = req.user.id;
-      const user = await User.findByPk(userId);
+      const user = await Users.findByPk(userId);
       if (!user) {
         return res.status(404).send({
           message: "User not found",

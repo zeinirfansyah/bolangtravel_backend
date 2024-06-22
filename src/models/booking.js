@@ -12,11 +12,13 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
 
-      Booking.belongsTo(models.User, {
+      Booking.belongsTo(models.Users, {
+        as: 'users',
         foreignKey: 'user_id',
       });
 
       Booking.belongsTo(models.Travel_Packages, {
+        as: 'travel_packages',
         foreignKey: 'travel_package_id',
       });
 
@@ -36,6 +38,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Booking',
+    freezeTableName: true
   });
   return Booking;
 };
