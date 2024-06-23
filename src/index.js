@@ -2,7 +2,8 @@
 const express = require("express");
 const {cors} = require("./middleware/app");
 const routes = require("./routes/routes");
-const authRouter = require("./routes/auth.routes")
+const authRouter = require("./routes/auth.routes");
+const bodyParser = require("body-parser");
 
 // init express app
 const app = express();
@@ -15,6 +16,8 @@ if (!process.env.JWT_SECRET) {
     process.exit(1);
 }
 
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors);
