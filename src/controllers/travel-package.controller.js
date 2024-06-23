@@ -5,6 +5,10 @@ const {
   Travel_Packages_Destinations,
 } = require("../models");
 
+const configureMulter = require("../utils/helpers/multer-config");
+
+const uploadThumbnail = configureMulter("thumbnails").single("thumbnail");
+
 const getAllTravelPackages = async (req, res, _next) => {
   try {
     const { limit, pages } = req.params;
@@ -44,6 +48,7 @@ const getAllTravelPackages = async (req, res, _next) => {
     });
   }
 };
+
 const getTravelPackageById = async (req, res, _next) => {
   try {
     const { id } = req.params;
@@ -165,14 +170,19 @@ const createBundledTravelPackage = async (req, res) => {
 };
 
 const createDestinations = async (req, res, _next) => {
-  try {
-    const { title, description, thumbnail } = req.body;
+  uploadThumbnail(req, res, async (err) => {
+    if (err) {
+      return res.status(500).send({
+        success: false,
+        message: err.message,
+        data: null,
+      });
+    }
 
-    const newDestination = await Destinations.create({
-      title,
-      description,
-      thumbnail,
-    });
+    const { title, description } = req.body;
+    const thumbnail = req.file
+      ? `/public/uploads/thumbnails/${req.file.filename}`
+      : null;
 
     if (!title) {
       return res.status(400).send({
@@ -182,10 +192,44 @@ const createDestinations = async (req, res, _next) => {
       });
     }
 
+    try {
+      const newDestination = await Destinations.create({
+        title,
+        description,
+        thumbnail,
+      });
+
+      return res.status(200).send({
+        success: true,
+        message: "Destination created successfully",
+        data: newDestination,
+      });
+    } catch (error) {
+      return res.status(500).send({
+        success: false,
+        message: error.message,
+        data: null,
+      });
+    }
+  });
+};
+
+const getAllDestinations = async (req, res, _next) => {
+  try {
+    const destinations = await Destinations.findAll();
+
+    if (destinations.length === 0) {
+      return res.status(404).send({
+        success: false,
+        message: "No destinations found",
+        data: null,
+      });
+    }
+
     return res.status(200).send({
       success: true,
-      message: "Destination created successfully",
-      data: newDestination,
+      message: "Destinations retrieved successfully",
+      data: destinations,
     });
   } catch (error) {
     return res.status(500).send({
@@ -198,62 +242,84 @@ const createDestinations = async (req, res, _next) => {
 
 const createTravelPackage = async (req, res) => {
   try {
-    const {
-      thumbnail,
-      category,
-      title,
-      description,
-      price,
-      location,
-      duration,
-      destinations,
-      rundowns,
-    } = req.body;
+    uploadThumbnail(req, res, async (err) => {
+      if (err) {
+        return res.status(400).json({ message: err.message });
+      }
 
-    // Create the Travel Package
-    const newPackage = await Travel_Packages.create({
-      thumbnail,
-      category,
-      title,
-      description,
-      price,
-      location,
-      duration,
-    });
+      const {
+        category,
+        title,
+        description,
+        price,
+        location,
+        duration,
+        destinations,
+        rundowns,
+      } = req.body;
 
-    // Associate destinations with the package
-    if (destinations && destinations.length > 0) {
-      for (const destinationId of destinations) {
-        const destination = await Destinations.findByPk(destinationId);
+      const thumbnail = req.file ? req.file.path : null;
 
-        if (!destination) {
-          return res
-            .status(400)
-            .json({
+      const parsedDestinations = JSON.parse(destinations);
+      const parsedRundowns = JSON.parse(rundowns);
+
+      const newPackage = await Travel_Packages.create({
+        thumbnail,
+        category,
+        title,
+        description,
+        price,
+        location,
+        duration,
+      });
+
+      if (parsedDestinations && parsedDestinations.length > 0) {
+        for (const destinationId of parsedDestinations) {
+          const destination = await Destinations.findByPk(destinationId);
+
+          if (!destination) {
+            return res.status(400).json({
               message: `Destination with id ${destinationId} not found`,
             });
+          }
+
+          await Travel_Packages_Destinations.create({
+            travel_package_id: newPackage.id,
+            destination_id: destination.id,
+          });
         }
-
-        await Travel_Packages_Destinations.create({
-          travel_package_id: newPackage.id,
-          destination_id: destination.id,
-        });
       }
-    }
 
-    // Associate rundowns with the package
-    if (rundowns && rundowns.length > 0) {
-      for (const rundown of rundowns) {
-        await Rundowns.create({
-          ...rundown,
-          travel_package_id: newPackage.id,
-        });
+      if (parsedRundowns && parsedRundowns.length > 0) {
+        for (const rundown of parsedRundowns) {
+          await Rundowns.create({
+            ...rundown,
+            travel_package_id: newPackage.id,
+          });
+        }
       }
-    }
 
-    res
-      .status(201)
-      .json({ message: "Package created successfully!", package: newPackage });
+      const fullPackage = await Travel_Packages.findByPk(newPackage.id, {
+        include: [
+          {
+            model: Destinations,
+            as: "destinations",
+            through: { attributes: [] },
+          },
+          {
+            model: Rundowns,
+            as: "rundowns",
+          },
+        ],
+      });
+
+      res
+        .status(201)
+        .json({
+          message: "Package created successfully!",
+          package: fullPackage,
+        });
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error creating package" });
@@ -266,4 +332,5 @@ module.exports = {
   createDestinations,
   createTravelPackage,
   createBundledTravelPackage,
+  getAllDestinations,
 };
