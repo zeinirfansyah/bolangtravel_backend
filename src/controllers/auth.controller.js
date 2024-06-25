@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { Users } = require("../models");
+const { isEmail, isStrongPassword } = require("validator");
 
 const register = async (req, res, _next) => {
   const { fullname, email, phone, address, username, password } = req.body;
@@ -12,14 +13,44 @@ const register = async (req, res, _next) => {
       });
     }
 
-    // check existing email and user
     const existingUser = await Users.findOne({ where: { username } });
     const existingEmail = await Users.findOne({ where: { email } });
+    const existingPhone = await Users.findOne({ where: { phone } });
 
-    if (existingUser || existingEmail) {
+    if (!isEmail(email)) {
+      return res.status(400).send({
+        message: "Please provide a valid email",
+        data: null,
+      });
+    }
+
+    if (
+      !isStrongPassword(password, {
+        minLength: 6,
+        minLowercase: 1,
+        minUppercase: 1,
+        minNumbers: 1,
+        minSymbols: 1,
+      })
+    ) {
+      return res.status(400).send({
+        message: [
+          "Your password is too weak.",
+          "1. Minimum 6 characters long",
+          "2. At least contain 1 uppercase letter",
+          "3. At least contain 1 lowercase letter",
+          "4. At least contain 1 number",
+          "5. At least contain 1 special character",
+        ],
+        data: null,
+      });
+    }
+    
+
+    if (existingUser || existingEmail || existingPhone) {
       return res.status(400).json({
         success: false,
-        message: "Username or email already exists",
+        message: "Username, email, or phone already exists.",
       });
     }
 
@@ -61,7 +92,7 @@ const login = async (req, res, _next) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found",
+        message: "You can't log in with a nonexistent account.",
       });
     }
 
