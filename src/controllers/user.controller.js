@@ -1,5 +1,6 @@
 const { Users } = require("../models");
 const bcrypt = require("bcryptjs");
+const { isEmail, isStrongPassword } = require("validator");
 
 const getUsers = async (req, res, _next) => {
   try {
@@ -68,14 +69,7 @@ const createUser = async (req, res, _next) => {
     const { fullname, phone, address, username, email, password, role } =
       req.body;
 
-    if (
-      !fullname ||
-      !phone ||
-      !address ||
-      !username ||
-      !email ||
-      !password
-    ) {
+    if (!fullname || !phone || !address || !username || !email || !password) {
       return res.status(400).send({
         success: false,
         message: "Please provide all fields",
@@ -85,11 +79,41 @@ const createUser = async (req, res, _next) => {
 
     const existingUser = await Users.findOne({ where: { username } });
     const existingEmail = await Users.findOne({ where: { email } });
+    const existingPhone = await Users.findOne({ where: { phone } });
 
-    if (existingUser || existingEmail) {
+    if (!isEmail(email)) {
+      return res.status(400).send({
+        message: "Please provide a valid email",
+        data: null,
+      });
+    }
+
+    if (
+      !isStrongPassword(password, {
+        minLength: 6,
+        minLowercase: 1,
+        minUppercase: 1,
+        minNumbers: 1,
+        minSymbols: 1,
+      })
+    ) {
+      return res.status(400).send({
+        message: [
+          "Your password is too weak.",
+          "1. Minimum 6 characters long",
+          "2. At least contain 1 uppercase letter",
+          "3. At least contain 1 lowercase letter",
+          "4. At least contain 1 number",
+          "5. At least contain 1 special character",
+        ],
+        data: null,
+      });
+    }
+
+    if (existingUser || existingEmail || existingPhone) {
       return res.status(400).send({
         success: false,
-        message: "Username or email already exists",
+        message: "Username, email, or phone already exists.",
         data: null,
       });
     }
@@ -107,7 +131,7 @@ const createUser = async (req, res, _next) => {
 
     return res.status(201).send({
       success: true,
-      message: "Users created successfully",
+      message: `User ${user.username} created successfully`,
       data: user,
     });
   } catch (error) {
@@ -122,8 +146,7 @@ const createUser = async (req, res, _next) => {
 const updateUser = async (req, res, _next) => {
   try {
     const { id } = req.params;
-    const { fullname, phone, address, username, email, role } =
-      req.body;
+    const updateData = {};
 
     const user = await Users.findOne({ where: { id } });
     if (!user) {
@@ -134,14 +157,65 @@ const updateUser = async (req, res, _next) => {
       });
     }
 
-    const updatedUser = await user.update({
-      fullname,
-      phone,
-      address,
-      username,
-      email,
-      role,
-    });
+    if (req.body.hasOwnProperty("fullname")) {
+      updateData.fullname = req.body.fullname;
+    }
+
+    if (req.body.hasOwnProperty("address")) {
+      updateData.address = req.body.address;
+    }
+
+    if (req.body.hasOwnProperty("phone")) {
+      updateData.phone = req.body.phone;
+      if (
+        updateData.phone !== user.phone &&
+        (await Users.findOne({ where: { phone: updateData.phone } }))
+      ) {
+        return res.status(400).send({
+          success: false,
+          message: "Phone number already exists",
+          data: null,
+        });
+      }
+    }
+
+    if (req.body.hasOwnProperty("username")) {
+      updateData.username = req.body.username;
+      if (
+        updateData.username !== user.username &&
+        (await Users.findOne({ where: { username: updateData.username } }))
+      ) {
+        return res.status(400).send({
+          success: false,
+          message: "Username already exists",
+          data: null,
+        });
+      }
+    }
+
+    if (req.body.hasOwnProperty("email")) {
+      updateData.email = req.body.email;
+
+      if (!isEmail(updateData.email)) {
+        return res.status(400).send({
+          message: "Please provide a valid email",
+          data: null,
+        });
+      }
+
+      if (
+        updateData.email !== user.email &&
+        (await Users.findOne({ where: { email: updateData.email } }))
+      ) {
+        return res.status(500).send({
+          success: false,
+          message: "Email already exists",
+          data: null,
+        });
+      }
+    }
+
+    const updatedUser = await user.update(updateData);
 
     return res.status(200).send({
       success: true,
@@ -188,7 +262,7 @@ const deleteUser = async (req, res, _next) => {
 const updateProfile = async (req, res, _next) => {
   try {
     const { id } = req.user;
-    const { fullname, phone, address, username, email, password } = req.body;
+    const updateProfile = {};
 
     const user = await Users.findOne({ where: { id } });
     if (!user) {
@@ -199,13 +273,65 @@ const updateProfile = async (req, res, _next) => {
       });
     }
 
-    const updatedUser = await user.update({
-      fullname,
-      phone,
-      address,
-      username,
-      email,
-    });
+    if (req.body.hasOwnProperty("fullname")) {
+      updateProfile.fullname = req.body.fullname;
+    }
+
+    if (req.body.hasOwnProperty("address")) {
+      updateProfile.address = req.body.address;
+    }
+
+    if (req.body.hasOwnProperty("phone")) {
+      updateProfile.phone = req.body.phone;
+      if (
+        updateProfile.phone !== user.phone &&
+        (await Users.findOne({ where: { phone: updateProfile.phone } }))
+      ) {
+        return res.status(400).send({
+          success: false,
+          message: "Phone number already exists",
+          data: null,
+        });
+      }
+    }
+
+    if (req.body.hasOwnProperty("username")) {
+      updateProfile.username = req.body.username;
+      if (
+        updateProfile.username !== user.username &&
+        (await Users.findOne({ where: { username: updateProfile.username } }))
+      ) {
+        return res.status(400).send({
+          success: false,
+          message: "Username already exists",
+          data: null,
+        });
+      }
+    }
+
+    if (req.body.hasOwnProperty("email")) {
+      updateProfile.email = req.body.email;
+
+      if (!isEmail(updateProfile.email)) {
+        return res.status(400).send({
+          message: "Please provide a valid email",
+          data: null,
+        });
+      }
+
+      if (
+        updateProfile.email !== user.email &&
+        (await Users.findOne({ where: { email: updateProfile.email } }))
+      ) {
+        return res.status(500).send({
+          success: false,
+          message: "Email already exists",
+          data: null,
+        });
+      }
+    }
+
+    const updatedUser = await user.update(updateProfile);
 
     return res.status(200).send({
       success: true,
@@ -250,6 +376,72 @@ const deleteProfile = async (req, res, _next) => {
   }
 };
 
+const selfUpdatePassword = async (req, res) => {
+  try {
+    const { id } = req.user;
+    const { oldPassword, newPassword } = req.body;
+
+    const user = await Users.findOne({ where: { id } });
+
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "Users not found",
+        data: null,
+      });
+    }
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).send({
+        success: false,
+        message: "Old password and new password are required",
+        data: null,
+      });
+    }
+
+    if (
+      !isStrongPassword(newPassword, {
+        minLength: 6,
+        minLowercase: 1,
+        minUppercase: 1,
+        minNumbers: 1,
+        minSymbols: 1,
+      })
+    ) {
+      return res.status(400).send({
+        message: [
+          "Your password is too weak.",
+          "1. Minimum 6 characters long",
+          "2. At least contain 1 uppercase letter",
+          "3. At least contain 1 lowercase letter",
+          "4. At least contain 1 number",
+          "5. At least contain 1 special character",
+        ],
+        data: null,
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).send({
+        success: false,
+        message: "Your old password is incorrect",
+        data: null,
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const updatedUser = await user.update({ password: hashedPassword });
+
+    return res.status(200).send({
+      success: true,
+      message: "Password updated successfully",
+      data: updatedUser,
+    });
+  } catch (error) {}
+};
+
 module.exports = {
   getUsers,
   getUserById,
@@ -258,4 +450,5 @@ module.exports = {
   deleteUser,
   updateProfile,
   deleteProfile,
+  selfUpdatePassword,
 };
