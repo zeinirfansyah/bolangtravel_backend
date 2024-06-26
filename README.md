@@ -4,7 +4,7 @@ This repository contains the source code for a web-based travel agency applicati
 
 ## Installation
  
-1. Clone this repository
+1. Clone this repository `git clone https://github.com/zeinirfansyah/bolangtravel_backend.git`
 2. Install project's dependencies `npm install`
 3. Install nodemon globally `npm i -g nodemon`
 4. Copy .env.example to .env `copy .env.example .env`
