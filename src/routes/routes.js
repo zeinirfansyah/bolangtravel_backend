@@ -10,7 +10,7 @@ router.get("/user/:id", verifyToken, authorizeRole("admin"), getUserById);
 router.post("/user", verifyToken, authorizeRole("admin"), createUser);
 router.patch("/user/:id", verifyToken, authorizeRole("admin"), updateUser);
 router.delete("/user/:id", verifyToken, authorizeRole("admin"), deleteUser);
-router.put("/user/:id/password", verifyToken, authorizeRole("admin"), updatePassword);
+router.put("/user/password/:id", verifyToken, authorizeRole("admin"), updatePassword);
 
 router.patch("/account", verifyToken, updateProfile);
 router.delete("/account", verifyToken, deleteProfile);
