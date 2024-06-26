@@ -181,7 +181,7 @@ const createDestinations = async (req, res, _next) => {
 
     const { title, description } = req.body;
     const thumbnail = req.file
-      ? `/public/uploads/thumbnails/${req.file.filename}`
+      ? `/uploads/thumbnails/${req.file.filename}`
       : null;
 
     if (!title) {
@@ -258,7 +258,7 @@ const createTravelPackage = async (req, res) => {
         rundowns,
       } = req.body;
 
-      const thumbnail = req.file ? req.file.path : null;
+      const thumbnail = req.file ? `/uploads/thumbnails/${req.file.filename}` : null;
 
       const parsedDestinations = JSON.parse(destinations);
       const parsedRundowns = JSON.parse(rundowns);
