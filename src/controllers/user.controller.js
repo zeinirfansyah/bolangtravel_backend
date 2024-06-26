@@ -442,6 +442,84 @@ const selfUpdatePassword = async (req, res) => {
   } catch (error) {}
 };
 
+const updatePassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email, phone, newPassword } = req.body;
+
+    const user = await Users.findOne({ where: { id } });
+
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "Users not found",
+        data: null,
+      });
+    }
+
+    if (!email || !phone || !newPassword) {
+      return res.status(400).send({
+        success: false,
+        message: "Email, phone, and new password are required",
+        data: null,
+      });
+    }
+
+    if (email !== user.email) {
+      return res.status(400).send({
+        success: false,
+        message: "Email does not match",
+        data: null,
+      });
+    }
+
+    if (phone !== user.phone) {
+      return res.status(400).send({
+        success: false,
+        message: "Phone does not match",
+        data: null,
+      });
+    }
+
+    if (
+      !isStrongPassword(newPassword, {
+        minLength: 6,
+        minLowercase: 1,
+        minUppercase: 1,
+        minNumbers: 1,
+        minSymbols: 1,
+      })
+    ) {
+      return res.status(400).send({
+        message: [
+          "Your password is too weak.",
+          "1. Minimum 6 characters long",
+          "2. At least contain 1 uppercase letter",
+          "3. At least contain 1 lowercase letter",
+          "4. At least contain 1 number",
+          "5. At least contain 1 special character",
+        ],
+        data: null,
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const updatedUser = await user.update({ password: hashedPassword });
+
+    return res.status(200).send({
+      success: true,
+      message: "Password updated successfully",
+      data: updatedUser,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: error.message,
+      data: null,
+    });
+  }
+};
+
 module.exports = {
   getUsers,
   getUserById,
@@ -451,4 +529,5 @@ module.exports = {
   updateProfile,
   deleteProfile,
   selfUpdatePassword,
+  updatePassword
 };
