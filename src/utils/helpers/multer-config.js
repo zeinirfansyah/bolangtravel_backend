@@ -11,7 +11,7 @@ const configureMulter = (uploadPath) => {
 
   const upload = multer({
     storage: storage,
-    limits: { fileSize: 1000000 },
+    limits: { fileSize: 3000000 },
     fileFilter: (req, file, cb) => {
       checkFileType(file, cb);
     },
