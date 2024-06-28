@@ -64,6 +64,28 @@ const getUserById = async (req, res, _next) => {
   }
 };
 
+const getAuthenticatedUser = async (req, res, _next) => {
+  try {
+    const user = await Users.findOne({
+      where: { id: req.user.id },
+      attributes: {
+        exclude: ["password"],
+      },
+    });
+    return res.status(200).send({
+      success: true,
+      message: "User retrieved successfully",
+      data: user,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: error.message,
+      data: null,
+    });
+  }
+};
+
 const createUser = async (req, res, _next) => {
   try {
     const { fullname, phone, address, username, email, password, role } =
@@ -529,5 +551,6 @@ module.exports = {
   updateProfile,
   deleteProfile,
   selfUpdatePassword,
-  updatePassword
+  updatePassword,
+  getAuthenticatedUser,
 };
