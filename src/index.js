@@ -1,9 +1,13 @@
 // import express
 const express = require("express");
 const {cors} = require("./middleware/app");
-const routes = require("./routes/routes");
-const authRouter = require("./routes/auth.routes");
+const travelPackage = require("./routes/travel_package.routes");
 const bodyParser = require("body-parser");
+
+const authRouter = require("./routes/auth.routes");
+const userRouter = require("./routes/user.routes");
+const accountRouter = require("./routes/account.routes");
+const destinationRouter = require("./routes/destination.routes");
 
 // init express app
 const app = express();
@@ -21,6 +25,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors);
+app.use(express.static('public'));
 
 app.use("/api/auth", authRouter)
-app.use("/api/", routes)
+app.use("/api/user", userRouter)
+app.use("/api/account", accountRouter)
+app.use("/api/destination", destinationRouter)
+app.use("/api/travel-package", travelPackage)
