@@ -1,3 +1,6 @@
+const fs = require("fs");
+const path = require("path");
+
 const { Destinations } = require("../models");
 
 const configureMulter = require("../utils/helpers/multer-config");
@@ -85,6 +88,14 @@ const updateDestination = async (req, res, _next) => {
       }
 
       if (thumbnail) {
+        if (req.file) {
+          const existingThumbnailPath = path.join(__dirname, `../../public${destination.thumbnail}`);
+          try {
+            fs.unlinkSync(existingThumbnailPath);
+          } catch (err) {
+            console.error("Error deleting thumbnail:", err);
+          }
+        }
         destination.thumbnail = thumbnail;
       }
 
