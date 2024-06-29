@@ -65,11 +65,11 @@ const updateDestination = async (req, res, _next) => {
 
       const { id } = req.params;
       const destination = await Destinations.findOne({ where: { id } });
-      
+
       const { title, description } = req.body;
       const thumbnail = req.file
-        ? `/uploads/thumbnails/${req.file.filename}` : destination.thumbnail;
-
+        ? `/uploads/thumbnails/${req.file.filename}`
+        : destination.thumbnail;
 
       if (!destination) {
         return res.status(404).send({
@@ -89,7 +89,10 @@ const updateDestination = async (req, res, _next) => {
 
       if (thumbnail) {
         if (req.file) {
-          const existingThumbnailPath = path.join(__dirname, `../../public${destination.thumbnail}`);
+          const existingThumbnailPath = path.join(
+            __dirname,
+            `../../public${destination.thumbnail}`
+          );
           try {
             fs.unlinkSync(existingThumbnailPath);
           } catch (err) {
@@ -146,8 +149,37 @@ const getAllDestinations = async (req, res, _next) => {
   }
 };
 
+const getDestinationById = async (req, res, _next) => {
+  try {
+    const { id } = req.params;
+
+    const destination = await Destinations.findOne({ where: { id } });
+
+    if (!destination) {
+      return res.status(404).send({
+        success: false,
+        message: "Destination not found",
+        data: null,
+      });
+    }
+
+    return res.status(200).send({
+      success: true,
+      message: "Destination retrieved successfully",
+      data: destination,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: error.message,
+      data: null,
+    });
+  }
+};
+
 module.exports = {
   createDestinations,
   getAllDestinations,
   updateDestination,
+  getDestinationById,
 };
