@@ -1,4 +1,4 @@
-# BolangTravel, Web-Based Travel Agency Application 
+# BolangTravel, Web-Based Travel Agency Application 🍔
 This repository contains the source code for a web-based travel agency application. The application is designed to facilitate travel bookings, itinerary planning, and other related services.
 
 ## Installation
@@ -10,3 +10,5 @@ This repository contains the source code for a web-based travel agency applicati
 5. Update database credentials & set JWT secret in `.env` file
 6. Run `npx sequelize-cli db:migrate`
 7. Run `npm start` or `node src/index.js`
+
+COBAAAAAAA
