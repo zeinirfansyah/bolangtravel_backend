@@ -1,7 +1,10 @@
+
+const path = require("path");
+
 const {
   Travel_Packages,
-  Destinations,
   Rundowns,
+  Destinations,
   Travel_Packages_Destinations,
 } = require("../models");
 
@@ -255,9 +258,59 @@ const createTravelPackage = async (req, res) => {
   }
 };
 
+const deleteTravelPackage = async (req, res, _next) => {
+  try {
+    const { id } = req.params;
+    const  travel_package = await Travel_Packages.findOne({ where: { id } });
+
+    if (!travel_package) {
+      return res.status(404).send({
+        success: false,
+        message: "Travel package not found",
+        data: null,
+      });
+    }
+
+    if (travel_package.thumbnail) {
+      const thumbnailPath = path.join(
+        __dirname,
+        `../../public${travel_package.thumbnail}`
+      );
+      try {
+        fs.unlinkSync(thumbnailPath);
+      } catch (err) {
+        console.error("Error deleting thumbnail:", err);
+      }
+    }
+
+    await Travel_Packages_Destinations.destroy({
+      where: { travel_package_id: id },
+    });
+
+    await Rundowns.destroy({
+      where: { travel_package_id: id },
+    });
+
+    await travel_package.destroy();
+
+    return res.status(200).send({
+      success: true,
+      message: "Travel package deleted successfully",
+      data: null,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: console.error("Error deleting travel_package:", error),
+      data: null,
+    });
+  }
+};
+
 module.exports = {
   getAllTravelPackages,
   getTravelPackageById,
   createTravelPackage,
   createBundledTravelPackage,
+  deleteTravelPackage,
 };

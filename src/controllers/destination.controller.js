@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const { Destinations } = require("../models");
+const { Destinations,Travel_Packages_Destinations } = require("../models");
 
 const configureMulter = require("../utils/helpers/multer-config");
 
@@ -201,6 +201,10 @@ const deleteDestination = async (req, res, _next) => {
         console.error("Error deleting thumbnail:", err);
       }
     }
+
+    await Travel_Packages_Destinations.destroy({
+      where: { destination_id: id },
+    });
 
     await destination.destroy();
 
