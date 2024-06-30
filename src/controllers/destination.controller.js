@@ -177,9 +177,51 @@ const getDestinationById = async (req, res, _next) => {
   }
 };
 
+const deleteDestination = async (req, res, _next) => {
+  try {
+    const { id } = req.params;
+    const destination = await Destinations.findOne({ where: { id } });
+
+    if (!destination) {
+      return res.status(404).send({
+        success: false,
+        message: "Destination not found",
+        data: null,
+      });
+    }
+
+    if (destination.thumbnail) {
+      const thumbnailPath = path.join(
+        __dirname,
+        `../../public${destination.thumbnail}`
+      );
+      try {
+        fs.unlinkSync(thumbnailPath);
+      } catch (err) {
+        console.error("Error deleting thumbnail:", err);
+      }
+    }
+
+    await destination.destroy();
+
+    return res.status(200).send({
+      success: true,
+      message: "Destination deleted successfully",
+      data: null,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: console.error("Error deleting destination:", error),
+      data: null,
+    });
+  }
+};
+
 module.exports = {
   createDestinations,
   getAllDestinations,
   updateDestination,
   getDestinationById,
+  deleteDestination,
 };
