@@ -1,4 +1,3 @@
-
 const path = require("path");
 
 const {
@@ -190,7 +189,9 @@ const createTravelPackage = async (req, res) => {
         rundowns,
       } = req.body;
 
-      const thumbnail = req.file ? `/uploads/thumbnails/${req.file.filename}` : null;
+      const thumbnail = req.file
+        ? `/uploads/thumbnails/${req.file.filename}`
+        : null;
 
       const parsedDestinations = JSON.parse(destinations);
       const parsedRundowns = JSON.parse(rundowns);
@@ -245,12 +246,10 @@ const createTravelPackage = async (req, res) => {
         ],
       });
 
-      res
-        .status(201)
-        .json({
-          message: "Package created successfully!",
-          package: fullPackage,
-        });
+      res.status(201).json({
+        message: "Package created successfully!",
+        package: fullPackage,
+      });
     });
   } catch (error) {
     console.error(error);
@@ -261,7 +260,7 @@ const createTravelPackage = async (req, res) => {
 const deleteTravelPackage = async (req, res, _next) => {
   try {
     const { id } = req.params;
-    const  travel_package = await Travel_Packages.findOne({ where: { id } });
+    const travel_package = await Travel_Packages.findOne({ where: { id } });
 
     if (!travel_package) {
       return res.status(404).send({
@@ -307,10 +306,137 @@ const deleteTravelPackage = async (req, res, _next) => {
   }
 };
 
+const updateTravelPackage = async (req, res, _next) => {
+  try {
+    uploadThumbnail(req, res, async (err) => {
+      if (err) {
+        return res.status(500).send({
+          success: false,
+          message: err.message,
+          data: null,
+        });
+      }
+
+      const { id } = req.params;
+
+      const travel_package = await Travel_Packages.findByPk(id);
+
+      if (!travel_package) {
+        return res.status(404).send({
+          success: false,
+          message: "Travel package not found",
+          data: null,
+        });
+      }
+
+      const {
+        category,
+        title,
+        description,
+        price,
+        location,
+        duration,
+        destinations,
+        rundowns,
+      } = req.body;
+
+      const thumbnail = req.file
+        ? `/uploads/thumbnails/${req.file.filename}`
+        : travel_package.thumbnail;
+
+      const parsedDestinations = JSON.parse(destinations);
+      const parsedRundowns = JSON.parse(rundowns);
+
+      if (req.file) {
+        const existingThumbnailPath = path.join(
+          __dirname,
+          `../../public${travel_package.thumbnail}`
+        );
+        try {
+          fs.unlinkSync(existingThumbnailPath);
+        } catch (err) {
+          console.error("Error deleting thumbnail:", err);
+        }
+      }
+
+      await travel_package.update({
+        thumbnail,
+        category,
+        title,
+        description,
+        price,
+        location,
+        duration,
+      });
+
+      await Travel_Packages_Destinations.destroy({
+        where: { travel_package_id: id },
+      });
+
+      await Rundowns.destroy({
+        where: { travel_package_id: id },
+      });
+
+      if (parsedDestinations && parsedDestinations.length > 0) {
+        for (const destinationId of parsedDestinations) {
+          const destination = await Destinations.findByPk(destinationId);
+
+          if (!destination) {
+            return res.status(400).json({
+              message: `Destination with id ${destinationId} not found`,
+            });
+          }
+
+          await Travel_Packages_Destinations.create({
+            travel_package_id: id,
+            destination_id: destination.id,
+          });
+        }
+      }
+
+      if (parsedRundowns && parsedRundowns.length > 0) {
+        for (const rundown of parsedRundowns) {
+          await Rundowns.create({
+            ...rundown,
+            travel_package_id: id,
+          });
+        }
+      }
+
+      const fullPackage = await Travel_Packages.findByPk(id, {
+        include: [
+          {
+            model: Destinations,
+            as: "destinations",
+            through: { attributes: [] },
+          },
+          {
+            model: Rundowns,
+            as: "rundowns",
+          },
+        ],
+      });
+
+      return res.status(200).send({
+        success: true,
+        message: "Travel package updated successfully",
+        data: fullPackage,
+      });
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: error.message,
+      data: null,
+    });
+  }
+};
+
 module.exports = {
   getAllTravelPackages,
   getTravelPackageById,
   createTravelPackage,
   createBundledTravelPackage,
   deleteTravelPackage,
+  updateTravelPackage,
 };
