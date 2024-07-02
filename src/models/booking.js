@@ -1,7 +1,5 @@
-'use strict';
-const {
-  Model
-} = require('sequelize');
+"use strict";
+const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Booking extends Model {
     /**
@@ -13,32 +11,34 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
 
       Booking.belongsTo(models.Users, {
-        as: 'users',
-        foreignKey: 'user_id',
+        as: "users",
+        foreignKey: "user_id",
       });
 
       Booking.belongsTo(models.Travel_Packages, {
-        as: 'travel_packages',
-        foreignKey: 'travel_package_id',
+        as: "travel_packages",
+        foreignKey: "travel_package_id",
       });
-
     }
   }
-  Booking.init({
-    date: DataTypes.DATE,
-    bank_name: DataTypes.STRING,
-    payer_name: DataTypes.STRING,
-    transfer_receipt: DataTypes.STRING,
-    status: {
-      type: DataTypes.ENUM('belum_bayar', 'pending', 'bayar_berhasil'),
-      defaultValue: 'belum_bayar'
+  Booking.init(
+    {
+      date: DataTypes.DATE,
+      bank_name: DataTypes.STRING,
+      payer_name: DataTypes.STRING,
+      transfer_receipt: DataTypes.STRING,
+      status: {
+        type: DataTypes.ENUM("unpaid", "pending", "paid", "failed"),
+        defaultValue: "unpaid",
+      },
+      user_id: DataTypes.INTEGER,
+      travel_package_id: DataTypes.INTEGER,
     },
-    user_id: DataTypes.INTEGER,
-    travel_package_id: DataTypes.INTEGER
-  }, {
-    sequelize,
-    modelName: 'Booking',
-    freezeTableName: true
-  });
+    {
+      sequelize,
+      modelName: "Booking",
+      freezeTableName: true,
+    }
+  );
   return Booking;
 };
