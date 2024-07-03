@@ -8,6 +8,7 @@ const authRouter = require("./routes/auth.routes");
 const userRouter = require("./routes/user.routes");
 const accountRouter = require("./routes/account.routes");
 const destinationRouter = require("./routes/destination.routes");
+const bookingRouter = require("./routes/booking.routes");
 
 // init express app
 const app = express();
@@ -32,3 +33,4 @@ app.use("/api/user", userRouter)
 app.use("/api/account", accountRouter)
 app.use("/api/destination", destinationRouter)
 app.use("/api/travel-package", travelPackage)
+app.use("/api/booking", bookingRouter)
