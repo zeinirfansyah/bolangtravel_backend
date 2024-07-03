@@ -66,11 +66,6 @@ const updateDestination = async (req, res, _next) => {
       const { id } = req.params;
       const destination = await Destinations.findOne({ where: { id } });
 
-      const { title, description } = req.body;
-      const thumbnail = req.file
-        ? `/uploads/thumbnails/${req.file.filename}`
-        : destination.thumbnail;
-
       if (!destination) {
         return res.status(404).send({
           success: false,
@@ -78,6 +73,11 @@ const updateDestination = async (req, res, _next) => {
           data: null,
         });
       }
+
+      const { title, description } = req.body;
+      const thumbnail = req.file
+        ? `/uploads/thumbnails/${req.file.filename}`
+        : destination.thumbnail;
 
       if (title) {
         destination.title = title;
