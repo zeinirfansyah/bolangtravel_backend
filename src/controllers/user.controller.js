@@ -1,6 +1,12 @@
 const { Users } = require("../models");
 const bcrypt = require("bcryptjs");
-const { isEmail, isStrongPassword } = require("validator");
+const {
+  validatePassword,
+  validateEmail,
+  validatePhone,
+  validateUsername,
+  validateRole,
+} = require("../utils/validators/user.validator");
 
 const getUsers = async (req, res, _next) => {
   try {
@@ -10,11 +16,10 @@ const getUsers = async (req, res, _next) => {
       },
     });
 
-    if (users.length === 0) {
+    if (!users) {
       return res.status(404).send({
         success: false,
         message: "No users found",
-        data: null,
       });
     }
 
@@ -27,7 +32,6 @@ const getUsers = async (req, res, _next) => {
     return res.status(500).send({
       success: false,
       message: error.message,
-      data: null,
     });
   }
 };
@@ -46,7 +50,6 @@ const getUserById = async (req, res, _next) => {
       return res.status(404).send({
         success: false,
         message: "Users not found",
-        data: null,
       });
     }
 
@@ -58,16 +61,16 @@ const getUserById = async (req, res, _next) => {
   } catch (error) {
     return res.status(500).send({
       success: false,
-      message: error.message,
-      data: null,
+      message: `Error retrieving user with id ${id}: ${error.message}`,
     });
   }
 };
 
 const getAuthenticatedUser = async (req, res, _next) => {
   try {
+    const { id } = req.user;
     const user = await Users.findOne({
-      where: { id: req.user.id },
+      where: { id },
       attributes: {
         exclude: ["password"],
       },
@@ -81,7 +84,6 @@ const getAuthenticatedUser = async (req, res, _next) => {
     return res.status(500).send({
       success: false,
       message: error.message,
-      data: null,
     });
   }
 };
@@ -95,48 +97,49 @@ const createUser = async (req, res, _next) => {
       return res.status(400).send({
         success: false,
         message: "Please provide all fields",
-        data: null,
       });
+    }
+
+    if (validateUsername(username)) {
+      return res.status(400).json({
+        message: validateUsername(username),
+      });
+    }
+
+    if (validatePhone(phone)) {
+      return res.status(400).json({
+        message: validatePhone(phone),
+      });
+    }
+
+    if (validateEmail(email)) {
+      return res.status(400).json({
+        message: validateEmail(email),
+      });
+    }
+
+    if (validatePassword(password)) {
+      return res.status(400).json({
+        message: validatePassword(password),
+      });
+    }
+
+    if (role) {
+      if (validateRole(role)) {
+        return res.status(400).json({
+          message: validateRole(role),
+        });
+      }
     }
 
     const existingUser = await Users.findOne({ where: { username } });
     const existingEmail = await Users.findOne({ where: { email } });
     const existingPhone = await Users.findOne({ where: { phone } });
 
-    if (!isEmail(email)) {
-      return res.status(400).send({
-        message: "Please provide a valid email",
-        data: null,
-      });
-    }
-
-    if (
-      !isStrongPassword(password, {
-        minLength: 6,
-        minLowercase: 1,
-        minUppercase: 1,
-        minNumbers: 1,
-        minSymbols: 1,
-      })
-    ) {
-      return res.status(400).send({
-        message: [
-          "Your password is too weak.",
-          "1. Minimum 6 characters long",
-          "2. At least contain 1 uppercase letter",
-          "3. At least contain 1 lowercase letter",
-          "4. At least contain 1 number",
-          "5. At least contain 1 special character",
-        ],
-        data: null,
-      });
-    }
-
     if (existingUser || existingEmail || existingPhone) {
       return res.status(400).send({
         success: false,
         message: "Username, email, or phone already exists.",
-        data: null,
       });
     }
 
@@ -159,8 +162,7 @@ const createUser = async (req, res, _next) => {
   } catch (error) {
     return res.status(500).send({
       success: false,
-      message: error.message,
-      data: null,
+      message: `Error creating user: ${error.message}`,
     });
   }
 };
@@ -171,11 +173,11 @@ const updateUser = async (req, res, _next) => {
     const updateData = {};
 
     const user = await Users.findOne({ where: { id } });
+
     if (!user) {
       return res.status(404).send({
         success: false,
         message: "Users not found",
-        data: null,
       });
     }
 
@@ -183,58 +185,82 @@ const updateUser = async (req, res, _next) => {
       updateData.fullname = req.body.fullname;
     }
 
-    if (req.body.hasOwnProperty("address")) {
-      updateData.address = req.body.address;
-    }
-
-    if (req.body.hasOwnProperty("phone")) {
-      updateData.phone = req.body.phone;
-      if (
-        updateData.phone !== user.phone &&
-        (await Users.findOne({ where: { phone: updateData.phone } }))
-      ) {
+    if (req.body.hasOwnProperty("username")) {
+      if (validateUsername(req.body.username)) {
         return res.status(400).send({
           success: false,
-          message: "Phone number already exists",
-          data: null,
+          message: validateUsername(req.body.username),
         });
       }
-    }
 
-    if (req.body.hasOwnProperty("username")) {
-      updateData.username = req.body.username;
       if (
-        updateData.username !== user.username &&
-        (await Users.findOne({ where: { username: updateData.username } }))
+        req.body.username !== user.username &&
+        (await Users.findOne({ where: { username: req.body.username } }))
       ) {
         return res.status(400).send({
           success: false,
           message: "Username already exists",
-          data: null,
         });
       }
+
+      updateData.username = req.body.username;
     }
 
-    if (req.body.hasOwnProperty("email")) {
-      updateData.email = req.body.email;
-
-      if (!isEmail(updateData.email)) {
+    if (req.body.hasOwnProperty("phone")) {
+      if (validatePhone(req.body.phone)) {
         return res.status(400).send({
-          message: "Please provide a valid email",
-          data: null,
+          success: false,
+          message: validatePhone(req.body.phone),
         });
       }
 
       if (
-        updateData.email !== user.email &&
-        (await Users.findOne({ where: { email: updateData.email } }))
+        req.body.phone !== user.phone &&
+        (await Users.findOne({ where: { phone: req.body.phone } }))
+      ) {
+        return res.status(400).send({
+          success: false,
+          message: "Phone number already exists",
+        });
+      }
+
+      updateData.phone = req.body.phone;
+    }
+
+    if (req.body.hasOwnProperty("email")) {
+      if (validateEmail(req.body.email)) {
+        return res.status(400).send({
+          success: false,
+          message: validateEmail(req.body.email),
+        });
+      }
+
+      if (
+        req.body.email !== user.email &&
+        (await Users.findOne({ where: { email: req.body.email } }))
       ) {
         return res.status(500).send({
           success: false,
           message: "Email already exists",
-          data: null,
         });
       }
+
+      updateData.email = req.body.email;
+    }
+
+    if (req.body.hasOwnProperty("address")) {
+      updateData.address = req.body.address;
+    }
+
+    if (req.body.hasOwnProperty("role")) {
+      if (validateRole(req.body.role)) {
+        return res.status(400).send({
+          success: false,
+          message: validateRole(req.body.role),
+        });
+      }
+
+      updateData.role = req.body.role;
     }
 
     const updatedUser = await user.update(updateData);
@@ -247,8 +273,7 @@ const updateUser = async (req, res, _next) => {
   } catch (error) {
     return res.status(500).send({
       success: false,
-      message: error.message,
-      data: null,
+      message: `Error updating user: ${error.message}`,
     });
   }
 };
@@ -261,7 +286,6 @@ const deleteUser = async (req, res, _next) => {
       return res.status(404).send({
         success: false,
         message: "Users not found",
-        data: null,
       });
     }
 
@@ -269,14 +293,12 @@ const deleteUser = async (req, res, _next) => {
 
     return res.status(200).send({
       success: true,
-      message: "Users deleted successfully",
-      data: null,
+      message: `User ${user.username} deleted successfully`,
     });
   } catch (error) {
     return res.status(500).send({
       success: false,
       message: error.message,
-      data: null,
     });
   }
 };
@@ -287,11 +309,11 @@ const updateProfile = async (req, res, _next) => {
     const updateProfile = {};
 
     const user = await Users.findOne({ where: { id } });
+
     if (!user) {
       return res.status(404).send({
         success: false,
         message: "Users not found",
-        data: null,
       });
     }
 
@@ -299,58 +321,73 @@ const updateProfile = async (req, res, _next) => {
       updateProfile.fullname = req.body.fullname;
     }
 
-    if (req.body.hasOwnProperty("address")) {
-      updateProfile.address = req.body.address;
-    }
-
-    if (req.body.hasOwnProperty("phone")) {
-      updateProfile.phone = req.body.phone;
-      if (
-        updateProfile.phone !== user.phone &&
-        (await Users.findOne({ where: { phone: updateProfile.phone } }))
-      ) {
+    if (req.body.hasOwnProperty("username")) {
+      if (validateUsername(req.body.username)) {
         return res.status(400).send({
           success: false,
-          message: "Phone number already exists",
-          data: null,
+          message: validateUsername(req.body.username),
         });
       }
-    }
 
-    if (req.body.hasOwnProperty("username")) {
-      updateProfile.username = req.body.username;
       if (
-        updateProfile.username !== user.username &&
-        (await Users.findOne({ where: { username: updateProfile.username } }))
+        req.body.username !== user.username &&
+        (await Users.findOne({
+          where: { username: req.body.username },
+        }))
       ) {
         return res.status(400).send({
           success: false,
           message: "Username already exists",
-          data: null,
         });
       }
+
+      updateProfile.username = req.body.username;
     }
 
-    if (req.body.hasOwnProperty("email")) {
-      updateProfile.email = req.body.email;
-
-      if (!isEmail(updateProfile.email)) {
+    if (req.body.hasOwnProperty("phone")) {
+      if (validatePhone(req.body.phone)) {
         return res.status(400).send({
-          message: "Please provide a valid email",
-          data: null,
+          success: false,
+          message: validatePhone(req.body.phone),
         });
       }
 
       if (
-        updateProfile.email !== user.email &&
-        (await Users.findOne({ where: { email: updateProfile.email } }))
+        req.body.phone !== user.phone &&
+        (await Users.findOne({ where: { phone: req.body.phone } }))
+      ) {
+        return res.status(400).send({
+          success: false,
+          message: "Phone number already exists",
+        });
+      }
+
+      updateProfile.phone = req.body.phone;
+    }
+
+    if (req.body.hasOwnProperty("email")) {
+      if (validateEmail(req.body.email)) {
+        return res.status(400).send({
+          success: false,
+          message: validateEmail(req.body.email),
+        });
+      }
+
+      if (
+        req.body.email !== user.email &&
+        (await Users.findOne({ where: { email: req.body.email } }))
       ) {
         return res.status(500).send({
           success: false,
           message: "Email already exists",
-          data: null,
         });
       }
+
+      updateProfile.email = req.body.email;
+    }
+
+    if (req.body.hasOwnProperty("address")) {
+      updateProfile.address = req.body.address;
     }
 
     const updatedUser = await user.update(updateProfile);
@@ -364,7 +401,6 @@ const updateProfile = async (req, res, _next) => {
     return res.status(500).send({
       success: false,
       message: error.message,
-      data: null,
     });
   }
 };
@@ -416,40 +452,24 @@ const selfUpdatePassword = async (req, res) => {
     if (!oldPassword || !newPassword) {
       return res.status(400).send({
         success: false,
-        message: "Old password and new password are required",
+        message: "oldPassword and newPassword are required",
         data: null,
       });
     }
 
-    if (
-      !isStrongPassword(newPassword, {
-        minLength: 6,
-        minLowercase: 1,
-        minUppercase: 1,
-        minNumbers: 1,
-        minSymbols: 1,
-      })
-    ) {
+    if (validatePassword(newPassword)) {
       return res.status(400).send({
-        message: [
-          "Your password is too weak.",
-          "1. Minimum 6 characters long",
-          "2. At least contain 1 uppercase letter",
-          "3. At least contain 1 lowercase letter",
-          "4. At least contain 1 number",
-          "5. At least contain 1 special character",
-        ],
-        data: null,
+        success: false,
+        message: validatePassword(newPassword),
       });
     }
 
-    const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+    const isPasswordMatch = await bcrypt.compare(oldPassword, user.password);
 
-    if (!isPasswordValid) {
+    if (!isPasswordMatch) {
       return res.status(401).send({
         success: false,
         message: "Your old password is incorrect",
-        data: null,
       });
     }
 
@@ -461,7 +481,12 @@ const selfUpdatePassword = async (req, res) => {
       message: "Password updated successfully",
       data: updatedUser,
     });
-  } catch (error) {}
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: `Error updating password: ${error.message}`,
+    });
+  }
 };
 
 const updatePassword = async (req, res) => {
@@ -475,23 +500,13 @@ const updatePassword = async (req, res) => {
       return res.status(404).send({
         success: false,
         message: "Users not found",
-        data: null,
       });
     }
 
     if (!email || !phone || !newPassword) {
       return res.status(400).send({
         success: false,
-        message: "Email, phone, and new password are required",
-        data: null,
-      });
-    }
-
-    if (email !== user.email) {
-      return res.status(400).send({
-        success: false,
-        message: "Email does not match",
-        data: null,
+        message: "Email, phone, and newPassword are required",
       });
     }
 
@@ -499,29 +514,20 @@ const updatePassword = async (req, res) => {
       return res.status(400).send({
         success: false,
         message: "Phone does not match",
-        data: null,
       });
     }
 
-    if (
-      !isStrongPassword(newPassword, {
-        minLength: 6,
-        minLowercase: 1,
-        minUppercase: 1,
-        minNumbers: 1,
-        minSymbols: 1,
-      })
-    ) {
+    if (email !== user.email) {
       return res.status(400).send({
-        message: [
-          "Your password is too weak.",
-          "1. Minimum 6 characters long",
-          "2. At least contain 1 uppercase letter",
-          "3. At least contain 1 lowercase letter",
-          "4. At least contain 1 number",
-          "5. At least contain 1 special character",
-        ],
-        data: null,
+        success: false,
+        message: "Email does not match",
+      });
+    }
+
+    if (validatePassword(newPassword)) {
+      return res.status(400).send({
+        success: false,
+        message: validatePassword(newPassword),
       });
     }
 
@@ -537,7 +543,6 @@ const updatePassword = async (req, res) => {
     return res.status(500).send({
       success: false,
       message: error.message,
-      data: null,
     });
   }
 };
