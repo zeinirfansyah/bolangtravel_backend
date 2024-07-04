@@ -1,7 +1,12 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { Users } = require("../models");
-const { isEmail, isStrongPassword } = require("validator");
+const {
+  validateEmail,
+  validateUsername,
+  validatePassword,
+  validatePhone,
+} = require("../utils/validators/user.validator");
 
 const register = async (req, res, _next) => {
   const { fullname, email, phone, address, username, password } = req.body;
@@ -13,39 +18,33 @@ const register = async (req, res, _next) => {
       });
     }
 
+    if (validateUsername(username)) {
+      return res.status(400).json({
+        message: validateUsername(username),
+      });
+    }
+
+    if (validatePhone(phone)) {
+      return res.status(400).json({
+        message: validatePhone(phone),
+      });
+    }
+
+    if (validateEmail(email)) {
+      return res.status(400).json({
+        message: validateEmail(email),
+      });
+    }
+
+    if (validatePassword(password)) {
+      return res.status(400).json({
+        message: validatePassword(password),
+      });
+    }
+
     const existingUser = await Users.findOne({ where: { username } });
     const existingEmail = await Users.findOne({ where: { email } });
     const existingPhone = await Users.findOne({ where: { phone } });
-
-    if (!isEmail(email)) {
-      return res.status(400).send({
-        message: "Please provide a valid email",
-        data: null,
-      });
-    }
-
-    if (
-      !isStrongPassword(password, {
-        minLength: 6,
-        minLowercase: 1,
-        minUppercase: 1,
-        minNumbers: 1,
-        minSymbols: 1,
-      })
-    ) {
-      return res.status(400).send({
-        message: [
-          "Your password is too weak.",
-          "1. Minimum 6 characters long",
-          "2. At least contain 1 uppercase letter",
-          "3. At least contain 1 lowercase letter",
-          "4. At least contain 1 number",
-          "5. At least contain 1 special character",
-        ],
-        data: null,
-      });
-    }
-    
 
     if (existingUser || existingEmail || existingPhone) {
       return res.status(400).json({
