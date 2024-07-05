@@ -74,7 +74,7 @@ const updateDestination = async (req, res, _next) => {
   }
 
   const { title, description } = req.body;
-  const thumbnail = req.files;
+  const thumbnail = req.files?.thumbnail
 
   try {
     if (title) {
