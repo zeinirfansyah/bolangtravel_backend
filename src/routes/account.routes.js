@@ -9,7 +9,6 @@ router.get("/", verifyToken, getAuthenticatedUser);
 router.patch("/", verifyToken, updateProfile);
 router.delete("/", verifyToken, deleteProfile);
 router.put("/password", verifyToken, selfUpdatePassword);
-router.get("/booking-history/:limit&:pages", verifyToken, getBookingHistories);
-router.get("/booking-history/:id", verifyToken, getBookingById);
+
 
 module.exports = router;

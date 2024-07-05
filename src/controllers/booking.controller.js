@@ -182,88 +182,211 @@ const getBookingById = async (req, res, _next) => {
 };
 
 const completeBooking = async (req, res, _next) => {
+  const { id: booking_id } = req.params;
+
+  const booking = await Bookings.findOne({ where: { id: booking_id } });
+
+  if (!booking) {
+    return res.status(404).send({
+      success: false,
+      message: "Booking not found",
+    });
+  }
+
+  const { id: user_id } = req.user;
+
+  if (booking.user_id !== user_id) {
+    return res.status(403).send({
+      success: false,
+      message: "You are not authorized to access this booking",
+    });
+  }
+
+  const { bank_name, payer_name } = req.body;
+  const transfer_receipt = req.file?.transfer_receipt;
+
+  if (!bank_name || !payer_name || !transfer_receipt) {
+    return res.status(400).send({
+      success: false,
+      message: "bank_name, payer_name, and transfer_receipt are required",
+    });
+  }
+
+  if (booking.status === "pending") {
+    return res.status(403).send({
+      success: false,
+      message: "Booking is already pending, please wait for confirmation",
+    });
+  }
+
+  if (booking.status === "paid") {
+    return res.status(400).send({
+      success: false,
+      message: "Booking is already completed",
+    });
+  }
+
+  if (booking.status === "failed") {
+    return res.status(400).send({
+      success: false,
+      message:
+        "You cant complete a failed booking, please contact admin or make a new booking",
+    });
+  }
+
   try {
-    uploadThumbnail(req, res, async (err) => {
-      if (err) {
-        return res.status(500).send({
-          success: false,
-          message: err.message,
-          data: null,
-        });
-      }
+    if (booking.transfer_receipt) {
+      return res.status(400).send({
+        success: false,
+        message: "Booking is already paid. Please wait for confirmation",
+      });
+    }
 
-      const { id } = req.params;
+    const file = req.files?.transfer_receipt;
+    const transfer_receipt_path = `./public/uploads/transfer_receipt`;
+    const allowedExtensions = [".png", ".jpg", ".jpeg", ".pdf"];
 
-      const booking = await Bookings.findOne({ where: { id } });
+    if (!allowedExtensions.includes(path.extname(file.name).toLowerCase())) {
+      return res.status(400).send({
+        success: false,
+        message: "Only PNG, JPG, JPEG, and PDF files are allowed",
+      });
+    }
 
-      if (!booking) {
-        return res.status(404).send({
-          success: false,
-          message: "Booking not found",
-        });
-      }
+    const uploadReceiptPath = await uploadFile(
+      file,
+      transfer_receipt_path,
+      allowedExtensions
+    );
 
-      const { bank_name, payer_name } = req.body;
-      const transfer_receipt = req.file
-        ? `/uploads/transfer_receipt/${req.file.filename}`
-        : booking.transfer_receipt;
-      const { id: user_id } = req.user;
+    const link = `/uploads/transfer_receipt/${path.basename(
+      uploadReceiptPath
+    )}`;
 
-      if (!bank_name || !payer_name || !transfer_receipt) {
+    const completedBooking = await booking.update({
+      bank_name,
+      payer_name,
+      transfer_receipt: link,
+      status: "pending",
+    });
+
+    return res.status(200).send({
+      success: true,
+      message: "Booking completed successfully",
+      data: completedBooking,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: `Internal server error: ${error.message}`,
+    });
+  }
+};
+
+const updateBooking = async (req, res, _next) => {
+  const { id: booking_id } = req.params;
+
+  const booking = await Bookings.findOne({ where: { id: booking_id } });
+
+  if (!booking) {
+    return res.status(404).send({
+      success: false,
+      message: "Booking not found",
+    });
+  }
+
+  const { bank_name, payer_name, status } = req.body;
+  const thumbnail = req.files?.thumbnail;
+
+  try {
+    if (bank_name) {
+      booking.bank_name = bank_name;
+    }
+
+    if (payer_name) {
+      booking.payer_name = payer_name;
+    }
+
+    if (status) {
+      booking.status = status;
+    }
+
+    if (thumbnail) {
+      const file = req.files?.thumbnail;
+      const destinationPath = `./public/uploads/transfer_receipt`;
+      const allowedExtensions = [".png", ".jpg", ".jpeg", ".pdf"];
+
+      if (!allowedExtensions.includes(path.extname(file.name).toLowerCase())) {
         return res.status(400).send({
           success: false,
-          message: "Bank name, payer name, and transfer receipt are required",
+          message: "Only PNG, JPG, JPEG, and PDF files are allowed",
         });
       }
 
-      if (booking.user_id !== user_id) {
-        return res.status(403).send({
-          success: false,
-          message: "You are not authorized to complete this booking",
-        });
+      const uploadReceiptPath = await uploadFile(
+        file,
+        destinationPath,
+        allowedExtensions
+      );
+
+      const link = `/uploads/thumbnails/${path.basename(uploadReceiptPath)}`;
+
+      const existingReceiptPath = path.join(
+        __dirname,
+        `../../public${booking.transfer_receipt}`
+      );
+
+      if (fs.existsSync(existingReceiptPath)) {
+        fs.unlinkSync(existingReceiptPath);
       }
 
-      if (booking.status == "pending") {
-        return res.status(403).send({
-          success: false,
-          message: "Booking is already pending, please wait for confirmation",
-        });
+      booking.thumbnail = link;
+    }
+
+    await booking.save();
+
+    return res.status(200).send({
+      success: true,
+      message: "Booking updated successfully",
+      data: booking,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: `Internal server error: ${error.message}`,
+    });
+  }
+};
+
+const deleteBooking = async (req, res, _next) => {
+  const { id: booking_id } = req.params;
+
+  const booking = await Bookings.findOne({ where: { id: booking_id } });
+
+  if (!booking) {
+    return res.status(404).send({
+      success: false,
+      message: "Booking not found",
+    });
+  }
+
+  try {
+    if (booking.transfer_receipt) {
+      const existingReceiptPath = path.join(
+        __dirname,
+        `../../public${booking.transfer_receipt}`
+      );
+
+      if (fs.existsSync(existingReceiptPath)) {
+        fs.unlinkSync(existingReceiptPath);
       }
+    }
 
-      if (booking.status == "paid") {
-        return res.status(403).send({
-          success: false,
-          message: "Booking is already completed",
-        });
-      }
+    await booking.destroy();
 
-      if (booking.status == "failed") {
-        return res.status(403).send({
-          success: false,
-          message:
-            "You cant complete a failed booking, please contact admin or make a new booking",
-        });
-      }
-
-      if (booking.transfer_receipt) {
-        return res.status(400).send({
-          success: false,
-          message: "Transfer receipt already uploaded",
-        });
-      }
-
-      const completedBooking = await booking.update({
-        bank_name,
-        payer_name,
-        transfer_receipt,
-        status: "pending",
-      });
-
-      return res.status(200).send({
-        success: true,
-        message: "Payment is success, please wait for confirmation",
-        data: completedBooking,
-      });
+    return res.status(200).send({
+      success: true,
+      message: "Booking deleted successfully",
     });
   } catch (error) {
     return res.status(500).send({
@@ -279,4 +402,6 @@ module.exports = {
   getAllBookings,
   getBookingHistories,
   getBookingById,
+  updateBooking,
+  deleteBooking,
 };
