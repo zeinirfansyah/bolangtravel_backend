@@ -5,9 +5,6 @@ const { Destinations, Travel_Packages_Destinations } = require("../models");
 
 const { uploadFile } = require("../utils/helpers/upload-file");
 
-const configureMulter = require("../utils/helpers/multer-config");
-
-const uploadThumbnail = configureMulter("thumbnails").single("thumbnail");
 
 const createDestinations = async (req, res, _next) => {
   const { title, description } = req.body;
@@ -77,7 +74,7 @@ const updateDestination = async (req, res, _next) => {
   }
 
   const { title, description } = req.body;
-  const thumbnail = req.files;
+  const thumbnail = req.files?.thumbnail
 
   try {
     if (title) {
@@ -89,7 +86,7 @@ const updateDestination = async (req, res, _next) => {
     }
 
     if (thumbnail) {
-      const file = req.files.thumbnail;
+      const file = req.files?.thumbnail;
       const destinationPath = `./public/uploads/thumbnails`;
       const allowedExtensions = [".png", ".jpg", ".jpeg"];
 
