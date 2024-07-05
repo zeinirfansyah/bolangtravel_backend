@@ -10,10 +10,6 @@ const {
 
 const { uploadFile } = require("../utils/helpers/upload-file");
 
-const configureMulter = require("../utils/helpers/multer-config");
-
-const uploadThumbnail = configureMulter("thumbnails").single("thumbnail");
-
 const getAllTravelPackages = async (req, res, _next) => {
   try {
     const { limit, pages } = req.params;
