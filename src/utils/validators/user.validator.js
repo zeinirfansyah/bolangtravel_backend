@@ -61,4 +61,16 @@ const validatePassword = (password) => {
   }
 };
 
-module.exports = { validateUsername, validateEmail, validatePassword, validatePhone };
+const validateRole = (role) => {
+  if (role !== "admin" && role !== "customer") {
+    return "Role must be either 'admin' or 'customer'";
+  }
+};
+
+module.exports = {
+  validateUsername,
+  validateEmail,
+  validatePassword,
+  validatePhone,
+  validateRole,
+};
