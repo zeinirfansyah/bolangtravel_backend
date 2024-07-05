@@ -86,7 +86,7 @@ const updateDestination = async (req, res, _next) => {
     }
 
     if (thumbnail) {
-      const file = req.files.thumbnail;
+      const file = req.files?.thumbnail;
       const destinationPath = `./public/uploads/thumbnails`;
       const allowedExtensions = [".png", ".jpg", ".jpeg"];
 
