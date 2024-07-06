@@ -1,9 +1,4 @@
-const moment = require("moment");
-
 const { Bookings, Travel_Packages, Users } = require("../models");
-const configureMulter = require("../utils/helpers/multer-config");
-const uploadThumbnail =
-  configureMulter("transfer_receipt").single("transfer_receipt");
 
 const createBooking = async (req, res, _next) => {
   const { date } = req.body;
