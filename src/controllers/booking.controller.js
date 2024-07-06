@@ -1,4 +1,5 @@
 const path = require("path");
+const fs = require("fs");
 const { uploadFile } = require("../utils/helpers/upload-file");
 
 const { Bookings, Travel_Packages, Users } = require("../models");
@@ -294,7 +295,7 @@ const updateBooking = async (req, res, _next) => {
   }
 
   const { bank_name, payer_name, status } = req.body;
-  const thumbnail = req.files?.thumbnail;
+  const transfer_receipt = req.files?.transfer_receipt;
 
   try {
     if (bank_name) {
@@ -309,8 +310,8 @@ const updateBooking = async (req, res, _next) => {
       booking.status = status;
     }
 
-    if (thumbnail) {
-      const file = req.files?.thumbnail;
+    if (transfer_receipt) {
+      const file = req.files?.transfer_receipt;
       const destinationPath = `./public/uploads/transfer_receipt`;
       const allowedExtensions = [".png", ".jpg", ".jpeg", ".pdf"];
 
@@ -327,7 +328,7 @@ const updateBooking = async (req, res, _next) => {
         allowedExtensions
       );
 
-      const link = `/uploads/thumbnails/${path.basename(uploadReceiptPath)}`;
+      const link = `/uploads/transfer_receipt/${path.basename(uploadReceiptPath)}`;
 
       const existingReceiptPath = path.join(
         __dirname,
@@ -338,7 +339,7 @@ const updateBooking = async (req, res, _next) => {
         fs.unlinkSync(existingReceiptPath);
       }
 
-      booking.thumbnail = link;
+      booking.transfer_receipt = link;
     }
 
     await booking.save();
