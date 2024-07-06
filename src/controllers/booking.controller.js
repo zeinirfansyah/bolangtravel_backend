@@ -1,3 +1,6 @@
+const path = require("path");
+const { uploadFile } = require("../utils/helpers/upload-file");
+
 const { Bookings, Travel_Packages, Users } = require("../models");
 
 const createBooking = async (req, res, _next) => {
@@ -198,7 +201,7 @@ const completeBooking = async (req, res, _next) => {
   }
 
   const { bank_name, payer_name } = req.body;
-  const transfer_receipt = req.file?.transfer_receipt;
+  const transfer_receipt = req.files?.transfer_receipt;
 
   if (!bank_name || !payer_name || !transfer_receipt) {
     return res.status(400).send({
