@@ -111,6 +111,7 @@ const login = async (req, res, _next) => {
         phone: user.phone,
         address: user.address,
         username: user.username,
+        role: user.role,
       },
       process.env.JWT_SECRET
     );
