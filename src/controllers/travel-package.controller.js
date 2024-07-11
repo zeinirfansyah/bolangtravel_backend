@@ -43,6 +43,42 @@ const getAllTravelPackages = async (req, res, _next) => {
     });
   }
 };
+const getFilteredTravel = async (req, res, _next) => {
+  try {
+    const { limit, pages, category } = req.params;
+
+    const limit_int = parseInt(limit);
+    const pages_int = parseInt(pages);
+
+    const offset = (pages_int - 1) * limit_int;
+
+    const packages = await Travel_Packages.findAndCountAll({
+      limit: limit_int,
+      offset: offset,
+      where: {
+        category: category,
+      },
+    });
+
+    if (!packages) {
+      return res.status(404).send({
+        success: false,
+        message: "No travel packages found",
+      });
+    }
+
+    return res.status(200).send({
+      success: true,
+      message: "Travel packages retrieved successfully",
+      data: packages,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: `Error: ${error.message}`,
+    });
+  }
+};
 
 const getTravelPackageById = async (req, res, _next) => {
   try {
@@ -405,4 +441,5 @@ module.exports = {
   createTravelPackage,
   deleteTravelPackage,
   updateTravelPackage,
+  getFilteredTravel,
 };
