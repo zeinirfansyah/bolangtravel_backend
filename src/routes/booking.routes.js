@@ -5,7 +5,7 @@ const { createBooking,completeBooking, getAllBookings, getBookingById, updateBoo
 const router = express.Router();
 
 router.post("/", verifyToken, createBooking);
-router.get("/booking-history/:limit&:pages", verifyToken, getBookingHistories);
+router.get("/booking-history", verifyToken, getBookingHistories);
 router.put("/complete-booking/:id", verifyToken, completeBooking);
 router.get("/:id", verifyToken, getBookingById);
 
