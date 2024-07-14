@@ -75,6 +75,13 @@ const getAllBookings = async (req, res, _next) => {
             exclude: ["created_at", "updated_at"],
           },
         },
+        {
+          model: Users,
+          as: "users",
+          attributes: {
+            exclude: ["password", "created_at", "updated_at"],
+          },
+        },
       ],
       attributes: {
         exclude: ["created_at", "updated_at"],
@@ -328,7 +335,9 @@ const updateBooking = async (req, res, _next) => {
         allowedExtensions
       );
 
-      const link = `/uploads/transfer_receipt/${path.basename(uploadReceiptPath)}`;
+      const link = `/uploads/transfer_receipt/${path.basename(
+        uploadReceiptPath
+      )}`;
 
       const existingReceiptPath = path.join(
         __dirname,
