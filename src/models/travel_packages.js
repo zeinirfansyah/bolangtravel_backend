@@ -36,7 +36,15 @@ module.exports = (sequelize, DataTypes) => {
     description: DataTypes.STRING,
     price: DataTypes.INTEGER,
     location: DataTypes.STRING,
-    duration: DataTypes.INTEGER
+    duration: DataTypes.INTEGER,
+    is_recommended : {
+      type: DataTypes.ENUM("true", "false"),
+      defaultValue: "false",
+    },
+    is_available : {
+      type: DataTypes.ENUM("true", "false"),
+      defaultValue: "true",
+    }
   }, {
     sequelize,
     modelName: 'Travel_Packages',
