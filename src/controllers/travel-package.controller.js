@@ -9,6 +9,7 @@ const {
 } = require("../models");
 
 const { uploadFile } = require("../utils/helpers/upload-file");
+const { Op } = require("sequelize");
 
 const getAllTravelPackages = async (req, res, _next) => {
   try {
