@@ -3,6 +3,7 @@ const fs = require("fs");
 const { uploadFile } = require("../utils/helpers/upload-file");
 
 const { Bookings, Travel_Packages, Users } = require("../models");
+const { Op } = require("sequelize");
 
 const createBooking = async (req, res, _next) => {
   const { date } = req.body;
@@ -58,21 +59,52 @@ const createBooking = async (req, res, _next) => {
 const getAllBookings = async (req, res, _next) => {
   try {
     const { limit, pages } = req.params;
+    const { search, status } = req.query;
 
     const limit_int = parseInt(limit);
     const pages_int = parseInt(pages);
 
     const offset = (pages_int - 1) * limit_int;
 
+    const searchCondition = search
+      ? {
+          [Op.or]: [
+            { "$users.fullname$": { [Op.like]: `%${search}%` } },
+            { "$users.username$": { [Op.like]: `%${search}%` } },
+            { "$users.phone$": { [Op.like]: `%${search}%` } },
+            { "$users.email$": { [Op.like]: `%${search}%` } },
+          ],
+        }
+      : {};
+
+    const statusCondition = status
+      ? {
+          status: {
+            [Op.eq]: status,
+          },
+        }
+      : {};
+
     const bookings = await Bookings.findAndCountAll({
       limit: limit_int,
       offset: offset,
+      where: {
+        ...searchCondition,
+        ...statusCondition,
+      },
       include: [
         {
           model: Travel_Packages,
           as: "travel_packages",
           attributes: {
             exclude: ["created_at", "updated_at"],
+          },
+        },
+        {
+          model: Users,
+          as: "users",
+          attributes: {
+            exclude: ["password", "created_at", "updated_at"],
           },
         },
       ],
@@ -328,7 +360,9 @@ const updateBooking = async (req, res, _next) => {
         allowedExtensions
       );
 
-      const link = `/uploads/transfer_receipt/${path.basename(uploadReceiptPath)}`;
+      const link = `/uploads/transfer_receipt/${path.basename(
+        uploadReceiptPath
+      )}`;
 
       const existingReceiptPath = path.join(
         __dirname,

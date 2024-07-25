@@ -30,6 +30,14 @@ module.exports = {
       duration: {
         type: Sequelize.INTEGER
       },
+      is_recommended : {
+        type: Sequelize.ENUM('true', 'false'),
+        defaultValue: "false"
+      },
+      is_available : {
+        type: Sequelize.ENUM('true', 'false'),
+        defaultValue: "true"
+      },
       created_at: {
         allowNull: false,
         type: Sequelize.DATE

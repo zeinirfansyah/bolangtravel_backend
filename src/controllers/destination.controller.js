@@ -4,7 +4,7 @@ const path = require("path");
 const { Destinations, Travel_Packages_Destinations } = require("../models");
 
 const { uploadFile } = require("../utils/helpers/upload-file");
-
+const { Op } = require("sequelize");
 
 const createDestinations = async (req, res, _next) => {
   const { title, description } = req.body;
@@ -74,7 +74,7 @@ const updateDestination = async (req, res, _next) => {
   }
 
   const { title, description } = req.body;
-  const thumbnail = req.files?.thumbnail
+  const thumbnail = req.files?.thumbnail;
 
   try {
     if (title) {
@@ -136,7 +136,28 @@ const updateDestination = async (req, res, _next) => {
 
 const getAllDestinations = async (req, res, _next) => {
   try {
-    const destinations = await Destinations.findAll();
+    const { limit, pages } = req.params;
+    const { search } = req.query;
+
+    const limit_int = parseInt(limit);
+    const pages_int = parseInt(pages);
+    const offset = (pages_int - 1) * limit_int;
+
+    const searchCondition = search
+      ? {
+          [Op.or]: [
+            { title: { [Op.like]: `%${search}%` } },
+          ],
+        }
+      : {};
+
+    const destinations = await Destinations.findAndCountAll({
+      limit: limit_int,
+      offset: offset,
+      where: {
+        ...searchCondition,
+      },
+    });
 
     if (!destinations) {
       return res.status(404).send({

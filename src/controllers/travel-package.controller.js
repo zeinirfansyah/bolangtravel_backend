@@ -9,19 +9,43 @@ const {
 } = require("../models");
 
 const { uploadFile } = require("../utils/helpers/upload-file");
+const { Op } = require("sequelize");
 
 const getAllTravelPackages = async (req, res, _next) => {
   try {
     const { limit, pages } = req.params;
+    const { search, category } = req.query;
 
     const limit_int = parseInt(limit);
     const pages_int = parseInt(pages);
 
     const offset = (pages_int - 1) * limit_int;
 
+    const searchCondition = search
+      ? {
+          [Op.or]: [
+            { "$travel_packages.title$": { [Op.like]: `%${search}%` } },
+            { "$travel_packages.category$": { [Op.like]: `%${search}%` } },
+            { "$travel_packages.location$": { [Op.like]: `%${search}%` } },
+          ],
+        }
+      : {};
+
+      const  categoryCondition = category
+      ? {
+          category: {
+            [Op.eq]: category,
+          },
+        }
+      : {};
+
     const packages = await Travel_Packages.findAndCountAll({
       limit: limit_int,
       offset: offset,
+      where: {
+        ...searchCondition,
+        ...categoryCondition
+      },
     });
 
     if (!packages) {
@@ -43,6 +67,8 @@ const getAllTravelPackages = async (req, res, _next) => {
     });
   }
 };
+
+// optional
 const getFilteredTravel = async (req, res, _next) => {
   try {
     const { limit, pages, category } = req.params;
