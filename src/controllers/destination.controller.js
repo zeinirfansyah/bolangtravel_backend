@@ -201,6 +201,42 @@ const updateDestination = async (req, res, _next) => {
   }
 };
 
+const getAllDestinationsWithPagination = async (req, res, _next) => {
+  try {
+    const { search } = req.query;
+
+    const searchCondition = search
+      ? {
+          [Op.or]: [{ title: { [Op.like]: `%${search}%` } }],
+        }
+      : {};
+
+    const destinations = await Destinations.findAndCountAll({
+      where: {
+        ...searchCondition,
+      },
+    });
+
+    if (!destinations) {
+      return res.status(404).send({
+        success: false,
+        message: "No destinations found",
+      });
+    }
+
+    return res.status(200).send({
+      success: true,
+      message: "Destinations retrieved successfully",
+      data: destinations,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 const getAllDestinations = async (req, res, _next) => {
   try {
     const { limit, pages } = req.params;
@@ -320,4 +356,5 @@ module.exports = {
   updateDestination,
   getDestinationById,
   deleteDestination,
+  getAllDestinationsWithPagination,
 };
