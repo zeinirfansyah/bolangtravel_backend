@@ -157,6 +157,8 @@ const createTravelPackage = async (req, res) => {
     duration,
     destinations,
     rundowns,
+    is_recommended,
+    is_available,
   } = req.body;
 
   if (
@@ -167,7 +169,9 @@ const createTravelPackage = async (req, res) => {
     !location ||
     !duration ||
     !destinations ||
-    !rundowns
+    !rundowns ||
+    !is_recommended ||
+    !is_available
   ) {
     return res.status(400).send({
       success: false,
@@ -213,6 +217,8 @@ const createTravelPackage = async (req, res) => {
       location,
       duration,
       thumbnail: link,
+      is_recommended,
+      is_available,
     });
 
     if (parsedDestinations && parsedDestinations.length > 0) {
