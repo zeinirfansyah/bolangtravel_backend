@@ -9,7 +9,7 @@ router.get("/table/:limit&:pages", getAllTravelPackages);
 router.get("/:id", getTravelPackageById);
 router.post("/", verifyToken, authorizeRole("admin"), createTravelPackage);
 router.delete("/:id", verifyToken, authorizeRole("admin"), deleteTravelPackage);
-router.put("/:id", verifyToken, authorizeRole("admin"), updateTravelPackage);
+router.patch("/:id", verifyToken, authorizeRole("admin"), updateTravelPackage);
 
 
 
