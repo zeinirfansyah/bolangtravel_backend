@@ -31,7 +31,7 @@ const getAllTravelPackages = async (req, res, _next) => {
         }
       : {};
 
-      const  categoryCondition = category
+    const categoryCondition = category
       ? {
           category: {
             [Op.eq]: category,
@@ -44,7 +44,7 @@ const getAllTravelPackages = async (req, res, _next) => {
       offset: offset,
       where: {
         ...searchCondition,
-        ...categoryCondition
+        ...categoryCondition,
       },
     });
 
@@ -318,6 +318,155 @@ const deleteTravelPackage = async (req, res, _next) => {
   }
 };
 
+// const updateTravelPackage = async (req, res, _next) => {
+//   const { id } = req.params;
+
+//   const travel_package = await Travel_Packages.findOne({ where: { id } });
+
+//   if (!travel_package) {
+//     return res.status(404).send({
+//       success: false,
+//       message: "Travel package not found",
+//     });
+//   }
+
+//   const {
+//     category,
+//     title,
+//     description,
+//     price,
+//     location,
+//     duration,
+//     destinations,
+//     rundowns,
+//   } = req.body;
+
+//   const thumbnail = req.files?.thumbnail;
+
+//   const parsedDestinations = JSON.parse(destinations);
+//   const parsedRundowns = JSON.parse(rundowns);
+
+//   if (
+//     !category ||
+//     !title ||
+//     !description ||
+//     !price ||
+//     !location ||
+//     !duration ||
+//     !destinations ||
+//     !rundowns ||
+//     !thumbnail
+//   ) {
+//     return res.status(400).send({
+//       success: false,
+//       message: "All fields are required",
+//     });
+//   }
+
+//   try {
+//     if (travel_package.thumbnail) {
+//       const existingThumbnailPath = path.join(
+//         __dirname,
+//         `../../public${travel_package.thumbnail}`
+//       );
+
+//       if (fs.existsSync(existingThumbnailPath)) {
+//         fs.unlinkSync(existingThumbnailPath);
+//       }
+//     }
+
+//     const file = req.files?.thumbnail;
+//     const destinationPath = `./public/uploads/thumbnails`;
+//     const allowedExtensions = [".png", ".jpg", ".jpeg"];
+
+//     if (!allowedExtensions.includes(path.extname(file.name).toLowerCase())) {
+//       return res.status(400).send({
+//         success: false,
+//         message:
+//           "Invalid file type. Only png, jpg, and jpeg files are allowed.",
+//       });
+//     }
+
+//     const uploadThumbnailPath = await uploadFile(
+//       file,
+//       destinationPath,
+//       allowedExtensions
+//     );
+
+//     const link = `/uploads/thumbnails/${path.basename(uploadThumbnailPath)}`;
+
+//     await travel_package.update({
+//       category,
+//       title,
+//       description,
+//       price,
+//       location,
+//       duration,
+//       thumbnail: link,
+//     });
+
+//     await Travel_Packages_Destinations.destroy({
+//       where: { travel_package_id: id },
+//     });
+
+//     await Rundowns.destroy({
+//       where: { travel_package_id: id },
+//     });
+
+//     if (parsedDestinations && parsedDestinations.length > 0) {
+//       for (const destinationId of parsedDestinations) {
+//         const destination = await Destinations.findByPk(destinationId);
+
+//         if (!destination) {
+//           return res.status(404).send({
+//             success: false,
+//             message: `Destination with id ${destinationId} not found`,
+//           });
+//         }
+
+//         await Travel_Packages_Destinations.create({
+//           travel_package_id: id,
+//           destination_id: destinationId,
+//         });
+//       }
+//     }
+
+//     if (parsedRundowns && parsedRundowns.length > 0) {
+//       for (const rundown of parsedRundowns) {
+//         await Rundowns.create({
+//           ...rundown,
+//           travel_package_id: id,
+//         });
+//       }
+//     }
+
+//     const fullPackage = await Travel_Packages.findByPk(id, {
+//       include: [
+//         {
+//           model: Destinations,
+//           as: "destinations",
+//           through: { attributes: [] },
+//         },
+//         {
+//           model: Rundowns,
+//           as: "rundowns",
+//         },
+//       ],
+//     });
+
+//     return res.status(200).send({
+//       success: true,
+//       message: "Travel package updated successfully",
+//       data: fullPackage,
+//     });
+//   } catch (error) {
+//     return res.status(500).send({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+
 const updateTravelPackage = async (req, res, _next) => {
   const { id } = req.params;
 
@@ -346,25 +495,52 @@ const updateTravelPackage = async (req, res, _next) => {
   const parsedDestinations = JSON.parse(destinations);
   const parsedRundowns = JSON.parse(rundowns);
 
-  if (
-    !category ||
-    !title ||
-    !description ||
-    !price ||
-    !location ||
-    !duration ||
-    !destinations ||
-    !rundowns ||
-    !thumbnail
-  ) {
-    return res.status(400).send({
-      success: false,
-      message: "All fields are required",
-    });
-  }
-
   try {
-    if (travel_package.thumbnail) {
+    if (category) {
+      travel_package.category = category;
+    }
+
+    if (title) {
+      travel_package.title = title;
+    }
+
+    if (description) {
+      travel_package.description = description;
+    }
+
+    if (price) {
+      travel_package.price = price;
+    }
+
+    if (location) {
+      travel_package.location = location;
+    }
+
+    if (duration) {
+      travel_package.duration = duration;
+    }
+
+    if (thumbnail) {
+      const file = req.files?.thumbnail;
+      const destinationPath = `./public/uploads/thumbnails`;
+      const allowedExtensions = [".png", ".jpg", ".jpeg"];
+
+      if (!allowedExtensions.includes(path.extname(file.name).toLowerCase())) {
+        return res.status(400).send({
+          success: false,
+          message:
+            "Invalid file type. Only png, jpg, and jpeg files are allowed.",
+        });
+      }
+
+      const uploadThumbnailPath = await uploadFile(
+        file,
+        destinationPath,
+        allowedExtensions
+      );
+
+      const link = `/uploads/thumbnails/${path.basename(uploadThumbnailPath)}`;
+
       const existingThumbnailPath = path.join(
         __dirname,
         `../../public${travel_package.thumbnail}`
@@ -373,37 +549,11 @@ const updateTravelPackage = async (req, res, _next) => {
       if (fs.existsSync(existingThumbnailPath)) {
         fs.unlinkSync(existingThumbnailPath);
       }
+
+      travel_package.thumbnail = link;
     }
 
-    const file = req.files?.thumbnail;
-    const destinationPath = `./public/uploads/thumbnails`;
-    const allowedExtensions = [".png", ".jpg", ".jpeg"];
-
-    if (!allowedExtensions.includes(path.extname(file.name).toLowerCase())) {
-      return res.status(400).send({
-        success: false,
-        message:
-          "Invalid file type. Only png, jpg, and jpeg files are allowed.",
-      });
-    }
-
-    const uploadThumbnailPath = await uploadFile(
-      file,
-      destinationPath,
-      allowedExtensions
-    );
-
-    const link = `/uploads/thumbnails/${path.basename(uploadThumbnailPath)}`;
-
-    await travel_package.update({
-      category,
-      title,
-      description,
-      price,
-      location,
-      duration,
-      thumbnail: link,
-    });
+    await travel_package.save();
 
     await Travel_Packages_Destinations.destroy({
       where: { travel_package_id: id },
